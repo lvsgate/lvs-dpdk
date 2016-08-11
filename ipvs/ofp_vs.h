@@ -9,6 +9,10 @@
 
 #include "ofp.h"
 
-void ofp_vs_start_ctl_thread(odp_instance_t instance, int core_id);
+int ofp_vs_init(void);
+void ofp_vs_finish(void);
+void ofp_vs_ctl_thread_start(odp_instance_t instance, int core_id);
+int ofp_vs_ctl_init(void);
+void ofp_vs_ctl_finish(void);
 
 #endif
