@@ -80,8 +80,6 @@ static const struct nla_policy ip_vs_cmd_policy[IPVS_CMD_ATTR_MAX + 1] = {
 	[IPVS_CMD_ATTR_TIMEOUT_TCP_FIN] = {.type = NLA_U32},
 	[IPVS_CMD_ATTR_TIMEOUT_UDP] = {.type = NLA_U32},
 	[IPVS_CMD_ATTR_LADDR] = {.type = NLA_NESTED},
-	[IPVS_CMD_ATTR_SNATDEST] = {.type = NLA_NESTED},
-	[IPVS_CMD_ATTR_SNATIP] = {.type = NLA_NESTED},
 }; 
 
 static int ip_vs_genl_set_cmd(struct nl_cache_ops *ops,
@@ -92,6 +90,53 @@ static int ip_vs_genl_set_cmd(struct nl_cache_ops *ops,
   OFP_INFO("Set command: %s\n", cmd->c_name);
   return 0;
 }
+
+static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
+                              struct genl_cmd *cmd,
+                              struct genl_info *info,
+                              void *arg)
+{
+  OFP_INFO("Get command: %s\n", cmd->c_name);
+  return 0;
+}
+
+static int ip_vs_genl_dump_laddrs(struct nl_cache_ops *ops,
+                              struct genl_cmd *cmd,
+                              struct genl_info *info,
+                              void *arg)
+{
+  
+  OFP_INFO("Dump command: %s\n", cmd->c_name);
+  return 0;
+}
+
+static int ip_vs_genl_dump_dests(struct nl_cache_ops *ops,
+                              struct genl_cmd *cmd,
+                              struct genl_info *info,
+                              void *arg)
+{
+  OFP_INFO("Dump command: %s\n", cmd->c_name);
+  return 0;
+}
+
+static int ip_vs_genl_dump_daemons(struct nl_cache_ops *ops,
+                              struct genl_cmd *cmd,
+                              struct genl_info *info,
+                              void *arg)
+{
+  OFP_INFO("Dump command: %s\n", cmd->c_name);
+  return 0;
+}
+
+static int ip_vs_genl_dump_services(struct nl_cache_ops *ops,
+                              struct genl_cmd *cmd,
+                              struct genl_info *info,
+                              void *arg)
+{
+  OFP_INFO("Dump command: %s\n", cmd->c_name);
+  return 0;
+}
+
 
 static int ofp_vs_nl_msg_handler(struct nl_msg *msg, void *arg)
 {
@@ -107,6 +152,94 @@ static struct genl_cmd ip_vs_genl_cmds[] = {
     .c_attr_policy = ip_vs_cmd_policy,
     .c_msg_parser = &ip_vs_genl_set_cmd,
   },
+	{
+	 .c_id = IPVS_CMD_SET_SERVICE,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_DEL_SERVICE,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_GET_SERVICE,
+	 .c_msg_parser = ip_vs_genl_get_cmd,
+	 .c_msg_parser = ip_vs_genl_dump_services,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 },
+	{
+	 .c_id = IPVS_CMD_NEW_DEST,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_SET_DEST,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_DEL_DEST,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_GET_DEST,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_dump_dests,
+	 },
+	{
+	 .c_id = IPVS_CMD_NEW_DAEMON,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_DEL_DAEMON,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_GET_DAEMON,
+	 .c_msg_parser = ip_vs_genl_dump_daemons,
+	 },
+	{
+	 .c_id = IPVS_CMD_SET_CONFIG,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_GET_CONFIG,
+	 .c_msg_parser = ip_vs_genl_get_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_GET_INFO,
+   .c_name = "ipvs_cmd_get_info",
+	 .c_msg_parser = ip_vs_genl_get_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_ZERO,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_FLUSH,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_NEW_LADDR,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_DEL_LADDR,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_set_cmd,
+	 },
+	{
+	 .c_id = IPVS_CMD_GET_LADDR,
+	 .c_attr_policy = ip_vs_cmd_policy,
+	 .c_msg_parser = ip_vs_genl_dump_laddrs,
+	 },
 };
 
 static struct genl_ops ip_vs_genl_ops = {
@@ -134,6 +267,7 @@ int ofp_vs_ctl_init(void)
 
   sock = nl_socket_alloc();
   if (NULL == sock) {
+    ret = -ENOMEM;
     OFP_ERR("ip_vs_genl_register failed\n");
     goto cleanup;
   }
