@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
 
 
 	odph_linux_pthread_join(thread_tbl, num_workers);
+  printf("End Worker\n");
 
   ofp_vs_finish();
 	printf("End Main()\n");

@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <sys/errno.h>
 
-#include "ofp.h"
 #include "ofp_vs.h"
 #include "ip_vs.h"
 
@@ -40,10 +39,12 @@ static void *ofp_vs_ctl(void *arg)
   
   OFP_INFO("ofp_vs_ctl thread is running.\n");
   while (*is_running) {
-    if ((err = -nl_recvmsgs_default(sock)) > 0) {
+    if ((err = -nl_recvmsgs_default(sock)) > 0 && (err != NLE_AGAIN)) {
       OFP_ERR("nl_recvmsgs_default return %d %s\n", err, strerror(errno));
       goto out;
     }
+    OFP_DBG("nl recv data\n");
+    //sleep(1);
 	}
 
 out:
@@ -202,6 +203,7 @@ static struct genl_cmd ip_vs_genl_cmds[] = {
 	 .c_id = IPVS_CMD_GET_DAEMON,
 	 .c_msg_parser = ip_vs_genl_dump_daemons,
 	 },
+   /*
 	{
 	 .c_id = IPVS_CMD_SET_CONFIG,
 	 .c_attr_policy = ip_vs_cmd_policy,
@@ -211,6 +213,7 @@ static struct genl_cmd ip_vs_genl_cmds[] = {
 	 .c_id = IPVS_CMD_GET_CONFIG,
 	 .c_msg_parser = ip_vs_genl_get_cmd,
 	 },
+   */
 	{
 	 .c_id = IPVS_CMD_GET_INFO,
    .c_name = "ipvs_cmd_get_info",
@@ -242,6 +245,7 @@ static struct genl_cmd ip_vs_genl_cmds[] = {
 	 },
 };
 
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 static struct genl_ops ip_vs_genl_ops = {
    //.o_id = GENL_ID_GENERATE,
 	 .o_cmds = ip_vs_genl_cmds,
@@ -313,11 +317,12 @@ cleanup:
 
 void ofp_vs_ctl_finish(void)
 {
+  ip_vs_genl_unregister();
+ 
   if (sock) {
+    OFP_DBG("close nl sock\n");
     nl_close(sock);
     nl_socket_free(sock);
-    sock = NULL;
   }
-  ip_vs_genl_unregister();
-  odph_linux_pthread_join(&ofp_vs_ctl_thread, 1);
+  //odph_linux_pthread_join(&ofp_vs_ctl_thread, 1);
 }
