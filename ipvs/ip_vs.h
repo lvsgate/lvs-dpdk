@@ -310,8 +310,8 @@ enum {
 	IPVS_CMD_DEL_DAEMON,	/* stop sync daemon */
 	IPVS_CMD_GET_DAEMON,	/* get sync daemon status */
 
-	IPVS_CMD_SET_CONFIG,	/* set config settings */
-	IPVS_CMD_GET_CONFIG,	/* get config settings */
+	IPVS_CMD_SET_TIMEOUT,	/* set config settings */
+	IPVS_CMD_GET_TIMEOUT,	/* get config settings */
 
 	IPVS_CMD_SET_INFO,	/* only used in GET_INFO reply */
 	IPVS_CMD_GET_INFO,	/* get general IPVS info */

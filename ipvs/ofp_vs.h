@@ -9,11 +9,18 @@
 
 #include "ofp.h"
 
+#include "rte_config.h"
+#include "rte_malloc.h"
 
-int ofp_vs_init(void);
+#include "ofp_vs_kern_compat.h"
+#include "kern_list.h"
+#include "ip_vs.h"
+
+
+int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params);
 void ofp_vs_finish(void);
 void ofp_vs_ctl_thread_start(odp_instance_t instance, int core_id);
-int ofp_vs_ctl_init(void);
+int ofp_vs_ctl_init(odp_instance_t instance, ofp_init_global_t *app_init_params);
 void ofp_vs_ctl_finish(void);
 
 #endif

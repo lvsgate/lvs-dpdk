@@ -184,13 +184,11 @@ int main(int argc, char *argv[])
 	/* Start CLI */
 	ofp_start_cli_thread(instance, app_init_params.linux_core_id, params.conf_file);
 
-	/* ofp_vs_ctl thread */
-	ofp_vs_ctl_thread_start(instance, app_init_params.linux_core_id);
-
-  if (ofp_vs_init() < 0) {
+  if (ofp_vs_init(instance, &app_init_params) < 0) {
     ofp_stop_processing();
     OFP_ERR("ofp_vs_init() failed\n");
   }
+
 
 
 	odph_linux_pthread_join(thread_tbl, num_workers);
