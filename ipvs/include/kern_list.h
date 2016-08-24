@@ -19,7 +19,7 @@ struct list_head {
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
-#define LIST_HEAD(name) \
+#define KERN_LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
 static inline void INIT_LIST_HEAD(struct list_head *list)
@@ -335,6 +335,9 @@ static inline void list_splice_tail_init(struct list_head *list,
 		INIT_LIST_HEAD(list);
 	}
 }
+
+#define container_of(ptr, type, member) \
+  ((type *) ((char *) (ptr) - (unsigned long) (&((type *) 0)->member)))
 
 /**
  * list_entry - get the struct for this entry

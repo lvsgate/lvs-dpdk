@@ -83,6 +83,9 @@ int ipvs_nl_send_message(struct nl_msg *msg, nl_recvmsg_msg_cb_t func, void *arg
 		nlmsg_free(msg);
 		return -1;
 	}
+  
+  nl_socket_set_local_port(sock, 100);
+  nl_socket_disable_seq_check(sock);
 
 	if (genl_connect(sock) < 0)
 		goto fail_genl;
@@ -106,8 +109,11 @@ int ipvs_nl_send_message(struct nl_msg *msg, nl_recvmsg_msg_cb_t func, void *arg
 	if (nl_send_auto_complete(sock, msg) < 0)
 		goto fail_genl;
 
-	if ((err = -nl_recvmsgs_default(sock)) > 0)
+	if ((err = -nl_recvmsgs_default(sock)) > 0) {
+    fprintf(stderr, "%s nl_recvmsgs_default error:%d %s\n",
+            __func__, err, strerror(err));
 		goto fail_genl;
+  }
 
 	nlmsg_free(msg);
 
@@ -165,9 +171,10 @@ static int ipvs_getinfo_parse_cb(struct nl_msg *msg, void *arg)
 	      attrs[IPVS_INFO_ATTR_CONN_TAB_SIZE]))
 		return -1;
 
+
 	ipvs_info.version = nla_get_u32(attrs[IPVS_INFO_ATTR_VERSION]);
 	ipvs_info.size = nla_get_u32(attrs[IPVS_INFO_ATTR_CONN_TAB_SIZE]);
-
+  
 	return NL_OK;
 }
 #endif

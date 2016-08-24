@@ -16,6 +16,7 @@
 #include <libnl3/netlink/genl/ctrl.h>
 #include <libnl3/netlink/genl/mngt.h>
 #include <libnl3/netlink/cli/utils.h>
+#include <libnl3/netlink/attr.h>
 
 #define IP_VS_VERSION_CODE	0x010201
 #define NVERSION(version)			\
@@ -104,6 +105,14 @@
 
 #define IP_VS_SCHEDNAME_MAXLEN	16
 #define IP_VS_IFNAME_MAXLEN	16
+
+union nf_inet_addr {
+        __u32           all[4];
+        __be32          ip;
+        __be32          ip6[4];
+        struct in_addr  in;
+        struct in6_addr in6;
+};
 
 /*
  *	The struct ip_vs_service_user and struct ip_vs_dest_user are

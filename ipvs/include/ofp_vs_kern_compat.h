@@ -1,10 +1,14 @@
 #ifndef __OFP_VS_KERN_COMPAT_H__
 #define __OFP_VS_KERN_COMPAT_H__
 
-#include "rte_config.h"
-#include "rte_atomic.h"
-#include "rte_rwlock.h"
-#include "rte_spinlock.h"
+#include <rte_config.h>
+#include <rte_atomic.h>
+#include <rte_rwlock.h>
+#include <rte_spinlock.h>
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
 
 #define IP_VS_POSSIBLE_CPU 32
 
@@ -86,106 +90,9 @@ typedef rte_atomic64_t atomic64_t;
 #define atomic64_dec_and_test(__var) rte_atomic64_dec_and_test(__var)
 #define atomic64_inc_return(__var) rte_atomic64_add_return(__var)
 
-#define rcu_read_lock() nf_rcu_read_lock
-#define rcu_read_unlock() nf_rcu_read_unlock
+#define rcu_read_lock() ofp_rcu_read_lock
+#define rcu_read_unlock() ofp_rcu_read_unlock
 
-
-
-#define PRINT_IP_FORMAT "%u.%u.%u.%u"
-#define  PRINT_NIP(x)\
-	((x >>  0) & 0xFF),\
-	((x >>  8) & 0xFF),\
-	((x >> 16) & 0xFF),\
-	((x >> 24) & 0xFF)
-
-
-#ifdef CONFIG_IP_VS_DEBUG
-
-extern int ip_vs_get_debug_level(void);
-
-static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
-					 const union nf_inet_addr *addr,
-					 int *idx)
-{
-	int len;
-#ifdef CONFIG_IP_VS_IPV6
-	if (af == AF_INET6)
-		len = snprintf(&buf[*idx], buf_len - *idx, "[%pI6]",
-			       &addr->in6) + 1;
-	else
-#endif
-		len = snprintf(&buf[*idx], buf_len - *idx, PRINT_IP_FORMAT,
-			       PRINT_NIP(addr->ip)) + 1;
-
-	*idx += len;
-	RTE_BUILD_BUG_ON(*idx > buf_len + 1);
-	return &buf[*idx - len];
-}
-
-#define IP_VS_DBG(__level, __fmt, args...) \
-	NF_LOG(DEBUG, __fmt, ##args)
-
-
-#define IP_VS_DBG_BUF(__level, __fmt, args...) 			\
-	do { 							\
-		char ip_vs_dbg_buf[160];			\
-		int ip_vs_dbg_idx = 0;				\
-		if (ip_vs_get_debug_level() >= NF_LOG_DEBUG)	\
-			NF_LOG(DEBUG, __fmt, ##args);		\
-	} while (0)
-
-#define IP_VS_ERR_BUF(__fmt, args...)				\
-	do { 							\
-		char ip_vs_dbg_buf[160];			\
-		int ip_vs_dbg_idx = 0;				\
-		if (ip_vs_get_debug_level() >= NF_LOG_DEBUG)	\
-			NF_LOG(ERROR, __fmt, ##args);		\
-	} while (0)
-
-#define IP_VS_DBG_ADDR(af, addr)					\
-	ip_vs_dbg_addr(af, ip_vs_dbg_buf,				\
-		       sizeof(ip_vs_dbg_buf), addr,			\
-		       &ip_vs_dbg_idx)
-
-
-#define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)			\
-	do {							\
-		if (ip_vs_get_debug_level() >= NF_LOG_DEBUG)	\
-			pp->debug_packet(pp, skb, ofs, msg);	\
-	} while (0)
-
-
-#define IP_VS_DBG_RL(msg...)  do {} while (0)
-#define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)	do {} while (0)
-
-#define EnterFunction(__level) \
-	NF_LOG(DEBUG, "Enter\n")
-
-#define LeaveFunction(__level) \
-	NF_LOG(DEBUG, "Lever\n")
-
-#else  /* NO DEBUGGING at ALL */
-
-#define IP_VS_DBG_BUF(level, msg...)  do {} while (0)
-#define IP_VS_ERR_BUF(msg...)  do {} while (0)
-#define IP_VS_DBG(level, msg...)  do {} while (0)
-#define IP_VS_DBG_RL(msg...)  do {} while (0)
-#define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)		do {} while (0)
-#define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)	do {} while (0)
-#define EnterFunction(level)   do {} while (0)
-#define LeaveFunction(level)   do {} while (0)
-
-#endif /* CONFIG_IP_VS_DEBUG */
-
-
-#define IP_VS_ERR_RL(__fmt, args...) \
-	NF_LOG(ERROR, __fmt, ##args)
-
-#define pr_err(__fmt, args...) \
-	NF_LOG(ERROR, __fmt, ##args)
-
-#define pr_info(__fmt, args...) \
-	NF_LOG(INFO, __fmt, ##args)
 
 #define ETH_ALEN ETHER_ADDR_LEN
 
@@ -215,10 +122,53 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 
 
 
-#define IP_VS_INC_ESTATS(esmib, id)
-
 #define PROT_SOCK 1024
 
 #define jiffies rte_get_timer_cycles()
+
+#define pr_err(__fmt, args...) \
+	OFP_ERR( __fmt, ##args)
+
+#define pr_info(__fmt, args...) \
+	OFP_INFO(__fmt, ##args)
+
+#define MAX_ERRNO 4095
+
+
+#define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
+
+static inline void *ERR_PTR(long error)
+{
+    return (void *) error;
+}
+
+static inline long PTR_ERR(const void *ptr)
+{
+    return (long) ptr;
+}
+
+static inline long IS_ERR(const void *ptr)
+{
+    return IS_ERR_VALUE((unsigned long)ptr);
+}
+
+static inline long IS_ERR_OR_NULL(const void *ptr)
+{
+    return !ptr || IS_ERR_VALUE((unsigned long)ptr);
+}
+
+/**
+ *  * ERR_CAST - Explicitly cast an error-valued pointer to another pointer type
+ *   * @ptr: The pointer to cast.
+ *    *
+ *     * Explicitly cast an error-valued pointer to another pointer type in such a
+ *      * way as to make it clear that's what's going on.
+ *       */
+static inline void *ERR_CAST(const void *ptr)
+{
+    /* cast away the const */
+      return (void *) ptr;
+}
+
 
 #endif
