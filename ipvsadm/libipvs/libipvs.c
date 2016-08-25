@@ -84,7 +84,6 @@ int ipvs_nl_send_message(struct nl_msg *msg, nl_recvmsg_msg_cb_t func, void *arg
 		return -1;
 	}
   
-  nl_socket_set_local_port(sock, 100);
   nl_socket_disable_seq_check(sock);
 
 	if (genl_connect(sock) < 0)

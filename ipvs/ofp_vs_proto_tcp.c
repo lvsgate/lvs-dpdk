@@ -21,20 +21,22 @@
 #define KMSG_COMPONENT "IPVS"
 #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
 
+#include "net/ip_vs.h"
+
 /*
  *	Timeout table[state]
  */
 int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1] = {
-	[IP_VS_TCP_S_NONE] = 2 * HZ,
-	[IP_VS_TCP_S_ESTABLISHED] = 90 * HZ,
-	[IP_VS_TCP_S_SYN_SENT] = 3 * HZ,
-	[IP_VS_TCP_S_SYN_RECV] = 30 * HZ,
-	[IP_VS_TCP_S_FIN_WAIT] = 7 * HZ,
-	[IP_VS_TCP_S_TIME_WAIT] = 7 * HZ,
-	[IP_VS_TCP_S_CLOSE] = 3 * HZ,
-	[IP_VS_TCP_S_CLOSE_WAIT] = 7 * HZ,
-	[IP_VS_TCP_S_LAST_ACK] = 7 * HZ,
-	[IP_VS_TCP_S_LISTEN] = 2 * 60 * HZ,
-	[IP_VS_TCP_S_SYNACK] = 30 * HZ,
-	[IP_VS_TCP_S_LAST] = 2 * HZ,
+	[IP_VS_TCP_S_NONE] = 2,
+	[IP_VS_TCP_S_ESTABLISHED] = 90,
+	[IP_VS_TCP_S_SYN_SENT] = 3,
+	[IP_VS_TCP_S_SYN_RECV] = 30,
+	[IP_VS_TCP_S_FIN_WAIT] = 7,
+	[IP_VS_TCP_S_TIME_WAIT] = 7,
+	[IP_VS_TCP_S_CLOSE] = 3,
+	[IP_VS_TCP_S_CLOSE_WAIT] = 7,
+	[IP_VS_TCP_S_LAST_ACK] = 7,
+	[IP_VS_TCP_S_LISTEN] = 2 * 60,
+	[IP_VS_TCP_S_SYNACK] = 30,
+	[IP_VS_TCP_S_LAST] = 2,
 };

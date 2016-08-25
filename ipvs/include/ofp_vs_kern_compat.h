@@ -69,6 +69,8 @@ typedef rte_spinlock_t spinlock_t;
 #define write_unlock(__lock) \
 	rte_rwlock_write_unlock(__lock)
 
+#define read_lock_bh read_lock
+#define read_unlock_bh read_unlock
 #define write_lock_bh write_lock
 #define write_unlock_bh write_unlock
 
@@ -85,13 +87,16 @@ typedef rte_atomic32_t atomic_t;
 typedef rte_atomic64_t atomic64_t;
 #define atomic64_inc(__var) rte_atomic64_inc(__var)
 #define atomic64_dec(__var) rte_atomic64_dec(__var)
-#define atomic64_set(__var) rte_atomic64_set(__var)
+#define atomic64_set(__dst, __var) rte_atomic64_set(__dst, __var)
 #define atomic64_read(__var) rte_atomic64_read(__var)
 #define atomic64_dec_and_test(__var) rte_atomic64_dec_and_test(__var)
 #define atomic64_inc_return(__var) rte_atomic64_add_return(__var)
 
 #define rcu_read_lock() ofp_rcu_read_lock
 #define rcu_read_unlock() ofp_rcu_read_unlock
+
+#define mutex_lock(mtx) pthread_mutex_lock(mtx)
+#define mutex_unlock(mtx) pthread_mutex_unlock(mtx)
 
 
 #define ETH_ALEN ETHER_ADDR_LEN
@@ -164,10 +169,10 @@ static inline long IS_ERR_OR_NULL(const void *ptr)
  *     * Explicitly cast an error-valued pointer to another pointer type in such a
  *      * way as to make it clear that's what's going on.
  *       */
-static inline void *ERR_CAST(const void *ptr)
+static inline const void *ERR_CAST(const void *ptr)
 {
     /* cast away the const */
-      return (void *) ptr;
+      return (const void *) ptr;
 }
 
 

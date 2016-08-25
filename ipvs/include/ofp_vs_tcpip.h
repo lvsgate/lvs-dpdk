@@ -3,6 +3,8 @@
 
 #include <asm/byteorder.h>
 #include <rte_ip.h>
+#include <netinet/tcp.h>
+#include <netinet/ip.h>
 
 /*
 struct iphdr {
@@ -27,7 +29,7 @@ struct iphdr {
 };
 */
 
-struct iphdr {
+struct __iphdr {
 	uint8_t		ihl:4,
 			version:4;
 	uint8_t		tos;
@@ -78,7 +80,7 @@ struct tcphdr {
 };
 */
 
-struct tcphdr {
+struct __tcphdr {
 	uint16_t source;  /**< TCP source port. */
 	uint16_t dest;  /**< TCP destination port. */
 	uint32_t seq;  /**< TX data sequence number. */

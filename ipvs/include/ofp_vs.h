@@ -11,6 +11,7 @@
 
 #include <rte_config.h>
 #include <rte_malloc.h>
+#include <rte_byteorder.h>
 
 #include "ofp_vs_kern_compat.h"
 #include "kern_list.h"

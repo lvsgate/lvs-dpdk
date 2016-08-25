@@ -18,8 +18,11 @@
 #include <rte_ethdev.h>
 #include <rte_per_lcore.h>
 
+#include "ofp.h"
+
 #include "ofp_vs_kern_compat.h"
 #include "ofp_vs_tcpip.h"
+#include "kern_list.h"
 #include "linux/ip_vs.h"
 
 struct ip_vs_iphdr {
@@ -92,6 +95,7 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 					 int *idx)
 {
 	int len;
+  (void)af;
 #ifdef CONFIG_IP_VS_IPV6
 	if (af == AF_INET6)
 		len = snprintf(&buf[*idx], buf_len - *idx, "[%pI6]",
@@ -102,7 +106,7 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 			       PRINT_NIP(addr->ip)) + 1;
 
 	*idx += len;
-	RTE_BUILD_BUG_ON(*idx > buf_len + 1);
+	//RTE_BUILD_BUG_ON(*idx > buf_len + 1);
 	return &buf[*idx - len];
 }
 
@@ -170,8 +174,8 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 /*
  *      The port number of FTP service (in network order).
  */
-#define FTPPORT  cpu_to_be16(21)
-#define FTPDATA  cpu_to_be16(20)
+#define FTPPORT  rte_cpu_to_be_16(21)
+#define FTPDATA  rte_cpu_to_be_16(20)
 
 /*
  *      TCP State Values
