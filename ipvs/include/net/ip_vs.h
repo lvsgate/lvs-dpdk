@@ -35,7 +35,7 @@ struct ip_vs_iphdr {
 static inline void
 ip_vs_fill_iphdr(int af, const void *nh, struct ip_vs_iphdr *iphdr)
 {
-  (void)af;
+	(void)af;
 #ifdef CONFIG_IP_VS_IPV6
 	if (af == AF_INET6) {
 		const struct ipv6hdr *iph = nh;
@@ -57,7 +57,7 @@ ip_vs_fill_iphdr(int af, const void *nh, struct ip_vs_iphdr *iphdr)
 static inline void ip_vs_addr_copy(int af, union nf_inet_addr *dst,
 				   const union nf_inet_addr *src)
 {
-  (void)af;
+	(void)af;
 #ifdef CONFIG_IP_VS_IPV6
 	if (af == AF_INET6)
 		ipv6_addr_copy(&dst->in6, &src->in6);
@@ -69,7 +69,7 @@ static inline void ip_vs_addr_copy(int af, union nf_inet_addr *dst,
 static inline int ip_vs_addr_equal(int af, const union nf_inet_addr *a,
 				   const union nf_inet_addr *b)
 {
-  (void)af;
+	(void)af;
 #ifdef CONFIG_IP_VS_IPV6
 	if (af == AF_INET6)
 		return ipv6_addr_equal(&a->in6, &b->in6);
@@ -95,7 +95,7 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 					 int *idx)
 {
 	int len;
-  (void)af;
+	(void)af;
 #ifdef CONFIG_IP_VS_IPV6
 	if (af == AF_INET6)
 		len = snprintf(&buf[*idx], buf_len - *idx, "[%pI6]",

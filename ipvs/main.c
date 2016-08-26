@@ -100,19 +100,19 @@ int main(int argc, char *argv[])
 	char cpumaskstr[64];
 	odph_linux_thr_params_t thr_params;
 	odp_instance_t instance;
-  struct sigaction signal_action;
+	struct sigaction signal_action;
 	struct rlimit rlp;
 
-  memset(&signal_action, 0, sizeof(signal_action));
-  signal_action.sa_handler = signal_handler;
-  sigfillset(&signal_action.sa_mask);
-  sigaction(SIGILL,  &signal_action, NULL);
-  sigaction(SIGFPE,  &signal_action, NULL);
-  sigaction(SIGSEGV, &signal_action, NULL);
-  sigaction(SIGTERM, &signal_action, NULL);
-  sigaction(SIGINT, &signal_action, NULL);
-  sigaction(SIGBUS,  &signal_action, NULL);
-  signal(SIGPIPE, SIG_IGN);
+	memset(&signal_action, 0, sizeof(signal_action));
+	signal_action.sa_handler = signal_handler;
+	sigfillset(&signal_action.sa_mask);
+	sigaction(SIGILL,  &signal_action, NULL);
+	sigaction(SIGFPE,  &signal_action, NULL);
+	sigaction(SIGSEGV, &signal_action, NULL);
+	sigaction(SIGTERM, &signal_action, NULL);
+	sigaction(SIGINT, &signal_action, NULL);
+	sigaction(SIGBUS,  &signal_action, NULL);
+	signal(SIGPIPE, SIG_IGN);
 
 	getrlimit(RLIMIT_CORE, &rlp);
 	printf("RLIMIT_CORE: %ld/%ld\n", rlp.rlim_cur, rlp.rlim_max);
@@ -184,17 +184,17 @@ int main(int argc, char *argv[])
 	/* Start CLI */
 	ofp_start_cli_thread(instance, app_init_params.linux_core_id, params.conf_file);
 
-  if (ofp_vs_init(instance, &app_init_params) < 0) {
-    ofp_stop_processing();
-    OFP_ERR("ofp_vs_init() failed\n");
-  }
+	if (ofp_vs_init(instance, &app_init_params) < 0) {
+		ofp_stop_processing();
+		OFP_ERR("ofp_vs_init() failed\n");
+	}
 
 
 
 	odph_linux_pthread_join(thread_tbl, num_workers);
-  printf("End Worker\n");
+	printf("End Worker\n");
 
-  ofp_vs_finish();
+	ofp_vs_finish();
 	printf("End Main()\n");
 
 	return 0;

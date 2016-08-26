@@ -144,22 +144,22 @@ typedef rte_atomic64_t atomic64_t;
 
 static inline void *ERR_PTR(long error)
 {
-    return (void *) error;
+	return (void *) error;
 }
 
 static inline long PTR_ERR(const void *ptr)
 {
-    return (long) ptr;
+	return (long) ptr;
 }
 
 static inline long IS_ERR(const void *ptr)
 {
-    return IS_ERR_VALUE((unsigned long)ptr);
+	return IS_ERR_VALUE((unsigned long)ptr);
 }
 
 static inline long IS_ERR_OR_NULL(const void *ptr)
 {
-    return !ptr || IS_ERR_VALUE((unsigned long)ptr);
+	return !ptr || IS_ERR_VALUE((unsigned long)ptr);
 }
 
 /**
@@ -171,8 +171,8 @@ static inline long IS_ERR_OR_NULL(const void *ptr)
  *       */
 static inline const void *ERR_CAST(const void *ptr)
 {
-    /* cast away the const */
-      return (const void *) ptr;
+	/* cast away the const */
+	return (const void *) ptr;
 }
 
 

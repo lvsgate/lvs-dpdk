@@ -71,7 +71,7 @@ int ipvs_nl_send_message(struct nl_msg *msg, nl_recvmsg_msg_cb_t func,
 	return 0;
 
 fail_genl:
-  fprintf(stderr, "%s:%d ipvs_nl_send_message failed %s\n", __FILE__, __LINE__, strerror(errno));
+	fprintf(stderr, "%s:%d ipvs_nl_send_message failed %s\n", __FILE__, __LINE__, strerror(errno));
 	sock = NULL;
 	nlmsg_free(msg);
 	errno = err;
@@ -141,7 +141,7 @@ nla_put_failure:
 
 static int ipvs_nl_noop_cb(struct nl_msg *msg, void *arg)
 {
-  fprintf(stderr, __func__);
+	fprintf(stderr, __func__);
 	return NL_OK;
 }
 
@@ -149,35 +149,35 @@ static int ipvs_nl_noop_cb(struct nl_msg *msg, void *arg)
 static int new_service()
 {
 	sock = nl_socket_alloc();
-  if (sock == NULL)
-    return -1;
+	if (sock == NULL)
+		return -1;
 
   //nl_socket_set_local_port(sock, 100);
  
 	if (genl_connect(sock) < 0) {
 	//if (nl_connect(sock, NETLINK_USERSOCK) < 0) {
-    fprintf(stderr, "%s:%d genl_connect failed %s\n", __FILE__, __LINE__, strerror(errno));
+	//fprintf(stderr, "%s:%d genl_connect failed %s\n", __FILE__, __LINE__, strerror(errno));
 		return -1;
-  }
+	}
 
 	family = genl_ctrl_resolve(sock, IPVS_GENL_NAME);
 	if (family < 0) {
-    fprintf(stderr, "%s:%d genl_ops_resolve failed %d\n", __FILE__, __LINE__, family);
+		fprintf(stderr, "%s:%d genl_ops_resolve failed %d\n", __FILE__, __LINE__, family);
     return -1;
   }
 
   nl_socket_set_peer_port(sock, 101);
 
   struct nl_msg *msg = ipvs_nl_message(IPVS_CMD_NEW_SERVICE, 0);
+  //struct nl_msg *msg = ipvs_nl_message(IPVS_CMD_GET_INFO, 0);
   if (!msg) return -1;
   if (ipvs_nl_fill_service_attr(msg, &service)) {
     fprintf(stderr, "ipvs_nl_fill_service_attr failed %s\n", strerror(errno));
     nlmsg_free(msg);
     return -1;
   }
-
   /*
-  if (genl_send_simple(sock, family, IPVS_CMD_NEW_SERVICE, IPVS_GENL_VERSION, 0) < 0) {
+  if (genl_send_simple(sock, family, IPVS_CMD_GET_INFO, IPVS_GENL_VERSION, 0) < 0) {
     fprintf(stderr, "ipvs_nl_fill_service_attr failed %s\n", strerror(errno));
     nlmsg_free(msg);
     return -1;
