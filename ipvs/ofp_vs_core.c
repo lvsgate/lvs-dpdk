@@ -17,12 +17,18 @@ int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params)
 {
 	int ret;
 
-	ret = ofp_vs_ctl_init(instance, app_init_params);
+	if ((ret = ofp_vs_ctl_init(instance, app_init_params)) < 0)
+    return ret;
+
+  if ((ret = ip_vs_rr_init()) < 0)
+    return ret;
+
 	
   return ret;
 }
 
 void ofp_vs_finish(void)
 {
+  ip_vs_rr_cleanup();
   ofp_vs_ctl_finish();
 }

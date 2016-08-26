@@ -40,3 +40,7 @@ int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1] = {
 	[IP_VS_TCP_S_SYNACK] = 30,
 	[IP_VS_TCP_S_LAST] = 2,
 };
+
+struct ip_vs_protocol ip_vs_protocol_tcp = {
+  .name = "TCP",
+};

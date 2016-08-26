@@ -68,6 +68,7 @@ static int ip_vs_num_services = 0;
 /*
  * sysctl for FULLNAT
  */
+/*
 int sysctl_ip_vs_timestamp_remove_entry = 1;
 int sysctl_ip_vs_mss_adjust_entry = 1;
 int sysctl_ip_vs_conn_reused_entry = 1;
@@ -75,6 +76,8 @@ int sysctl_ip_vs_toa_entry = 1;
 static int ip_vs_entry_min = 0;
 static int ip_vs_entry_max = 1;
 extern int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1];
+*/
+
 /*
  * sysctl for SYNPROXY
  */
@@ -93,7 +96,7 @@ int sysctl_ip_vs_synproxy_conn_reuse_fw = IP_VS_SYNPROXY_CONN_REUSE_FW_DEFAULT;
 int sysctl_ip_vs_synproxy_conn_reuse_cw = IP_VS_SYNPROXY_CONN_REUSE_CW_DEFAULT;
 int sysctl_ip_vs_synproxy_conn_reuse_la = IP_VS_SYNPROXY_CONN_REUSE_LA_DEFAULT;
 int sysctl_ip_vs_synproxy_dup_ack_thresh = IP_VS_SYNPROXY_DUP_ACK_DEFAULT;
-int sysctl_ip_vs_synproxy_skb_store_thresh = IP_VS_SYNPROXY_SKB_STORE_DEFAULT;
+int sysctl_ip_vs_synproxy_msg_store_thresh = IP_VS_SYNPROXY_SKB_STORE_DEFAULT;
 int sysctl_ip_vs_synproxy_syn_retry = IP_VS_SYNPROXY_SYN_RETRY_DEFAULT;
 
 static int ip_vs_synproxy_switch_min = 0;
@@ -108,10 +111,12 @@ static int ip_vs_synproxy_dup_ack_cnt_min = 0;
 static int ip_vs_synproxy_dup_ack_cnt_max = 65535;
 static int ip_vs_synproxy_syn_retry_min = 0;
 static int ip_vs_synproxy_syn_retry_max = 6;
-static int ip_vs_synproxy_skb_store_thresh_min = 0;
-static int ip_vs_synproxy_skb_store_thresh_max = 5;
+static int ip_vs_synproxy_msg_store_thresh_min = 0;
+static int ip_vs_synproxy_msg_store_thresh_max = 5;
 */
+
 /* local address port range */
+/*
 int sysctl_ip_vs_lport_max = 65535;
 int sysctl_ip_vs_lport_min = 5000;
 int sysctl_ip_vs_lport_tries = 10000;
@@ -119,6 +124,8 @@ static int ip_vs_port_min = 1025;
 static int ip_vs_port_max = 65535;
 static int ip_vs_port_try_min = 10;
 static int ip_vs_port_try_max = 60000;
+*/
+
 /*
  * sysctl for DEFENCE ATTACK
  */
@@ -131,13 +138,15 @@ int sysctl_ip_vs_conn_expire_tcp_rst = 1;
 int sysctl_ip_vs_fast_xmit = 1;
 /* L2 fast xmit, inside (to RS) */
 int sysctl_ip_vs_fast_xmit_inside = 1;
-/* skb csum offload */
+/* msg csum offload */
 int sysctl_ip_vs_csum_offload = 1;
 
 /* reserve core for the control flow */
 int sysctl_ip_vs_reserve_core = 0;
+/*
 static int ip_vs_reserve_core_min = 0;
 static int ip_vs_reserve_core_max = 6;
+*/
 
 #ifdef CONFIG_IP_VS_DEBUG
 static int sysctl_ip_vs_debug_level = 0;
@@ -152,6 +161,7 @@ extern int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1];
 
 int ip_vs_use_count_inc(void)
 {
+  return 0;
 }
 
 void ip_vs_use_count_dec(void)
@@ -174,21 +184,34 @@ static struct nl_msg *ipvs_nl_message(const struct genl_info *info,
 	return msg;
 }
 
-static int ipvs_nl_send_message(const struct genl_info *info,
+static int ipvs_nl_reply(const struct genl_info *info,
                                             struct nl_msg *msg)
 {
   nl_socket_set_peer_port(sock, info->who->nl_pid);
 	return nl_send_auto_complete(sock, msg);
 }
 
-static int ipvs_nl_message_done(const struct genl_info *info, int cmd)
+static int ipvs_nl_multi_reply_done(const struct genl_info *info, int cmd)
 {
-  nl_socket_set_peer_port(sock, info->who->nl_pid);
+  struct nl_msg *msg;
+
+	msg = nlmsg_alloc();
+	if (!msg)
+		return -ENOMEM;
+  
+  /*
   return genl_send_simple(sock, NLMSG_DONE, cmd,
                           IPVS_GENL_VERSION, NLM_F_MULTI);
+  */
+
+  genlmsg_put(msg, info->who->nl_pid, info->nlh->nlmsg_seq,
+              NLMSG_DONE, 0, NLM_F_MULTI, cmd,
+              IPVS_GENL_VERSION);
+
+  return ipvs_nl_reply(info, msg); 
 }
 
-static int ipvs_nl_message_error(const struct genl_info *info,
+static int ipvs_nl_reply_error(const struct genl_info *info,
             int cmd, int err)
 {
   struct nl_msg *msg;
@@ -196,7 +219,7 @@ static int ipvs_nl_message_error(const struct genl_info *info,
 
 	msg = nlmsg_alloc();
 	if (!msg)
-		return NULL;
+		return -ENOMEM;
 
   genlmsg_put(msg, info->who->nl_pid, info->nlh->nlmsg_seq,
               NLMSG_ERROR, sizeof(struct nlmsgerr), 0, cmd,
@@ -205,7 +228,7 @@ static int ipvs_nl_message_error(const struct genl_info *info,
   e = nlmsg_data(nlmsg_hdr(msg));
   e->error = err;
 
-  return ipvs_nl_send_message(info, msg);
+  return ipvs_nl_reply(info, msg);
 }
 
 /*
@@ -1535,7 +1558,7 @@ static struct nla_policy ip_vs_svc_policy[IPVS_SVC_ATTR_MAX + 1] = {
 	[IPVS_SVC_ATTR_PORT] = {.type = NLA_U16},
 	[IPVS_SVC_ATTR_FWMARK] = {.type = NLA_U32},
 	[IPVS_SVC_ATTR_SCHED_NAME] = {.type = NLA_STRING,
-				      .minlen = IP_VS_SCHEDNAME_MAXLEN},
+				      .maxlen = IP_VS_SCHEDNAME_MAXLEN},
 	[IPVS_SVC_ATTR_FLAGS] = {.type = NLA_UNSPEC,
 				 .minlen = sizeof(struct ip_vs_flags)},
 	[IPVS_SVC_ATTR_TIMEOUT] = {.type = NLA_U32},
@@ -1573,11 +1596,15 @@ static int ip_vs_genl_parse_service(struct ip_vs_service_user_kern *usvc,
 {
 	struct nlattr *attrs[IPVS_SVC_ATTR_MAX + 1];
 	struct nlattr *nla_af, *nla_port, *nla_fwmark, *nla_protocol, *nla_addr;
+  int ret = 0;
 
 	/* Parse mandatory identifying service fields first */
 	if (nla == NULL ||
-	    nla_parse_nested(attrs, IPVS_SVC_ATTR_MAX, nla, ip_vs_svc_policy))
+	    (ret = nla_parse_nested(attrs, IPVS_SVC_ATTR_MAX, nla, ip_vs_svc_policy))) {
+    OFP_ERR("%s %s:%d nla %p nla_parse_nested return %d\n",
+            __func__, __FILE__, __LINE__, nla, ret);
 		return -EINVAL;
+  }
 
 	nla_af = attrs[IPVS_SVC_ATTR_AF];
 	nla_protocol = attrs[IPVS_SVC_ATTR_PROTOCOL];
@@ -1585,8 +1612,10 @@ static int ip_vs_genl_parse_service(struct ip_vs_service_user_kern *usvc,
 	nla_port = attrs[IPVS_SVC_ATTR_PORT];
 	nla_fwmark = attrs[IPVS_SVC_ATTR_FWMARK];
 
-	if (!(nla_af && (nla_fwmark || (nla_port && nla_protocol && nla_addr))))
+	if (!(nla_af && (nla_fwmark || (nla_port && nla_protocol && nla_addr)))) {
+    OFP_ERR("return EINVAL %s %s:%d\n", __func__, __FILE__, __LINE__);
 		return -EINVAL;
+  }
 
 	memset(usvc, 0, sizeof(*usvc));
 
@@ -1621,8 +1650,10 @@ static int ip_vs_genl_parse_service(struct ip_vs_service_user_kern *usvc,
 		nla_netmask = attrs[IPVS_SVC_ATTR_NETMASK];
 		nla_est_timeout = attrs[IPVS_SVC_ATTR_EST_TIMEOUT];
 
-		if (!(nla_sched && nla_flags && nla_timeout && nla_netmask))
+		if (!(nla_sched && nla_flags && nla_timeout && nla_netmask)) {
+      OFP_ERR("return EINVAL %s %s:%d\n", __func__, __FILE__, __LINE__);
 			return -EINVAL;
+    }
 
 		nla_memcpy(&flags, nla_flags, sizeof(flags));
 
@@ -1749,7 +1780,7 @@ static int ip_vs_genl_fill_service(struct nl_msg *msg,
 
 	return 0;
 
-      nla_put_failure:
+nla_put_failure:
 	nla_nest_cancel(msg, nl_service);
 	return -EMSGSIZE;
 }
@@ -1765,7 +1796,8 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 {
 	struct nl_msg *msg;
 	//struct nlattr *nl_attr;
-	int ret, cmd_id, reply_cmd;
+	int ret = 0, cmd_id, reply_cmd;
+	struct nlattr *attrs[IPVS_CMD_ATTR_MAX + 1];
 
   (void)arg;
   (void)ops;
@@ -1774,7 +1806,7 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
   OFP_INFO("Get command: %s\n", cmd->c_name);
 
 	if (cmd_id == IPVS_CMD_GET_SERVICE) {
-    if (info->nlh->nlmsg_flags | NLM_F_DUMP) {
+    if (info->nlh->nlmsg_flags & NLM_F_DUMP) {
       return ip_vs_genl_dump_services(cmd, info, arg);
     }
 		reply_cmd = IPVS_CMD_NEW_SERVICE;
@@ -1793,6 +1825,15 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 
 	mutex_lock(&__ip_vs_mutex);
 
+  
+  /* Try to find the service for which to dump destinations */
+	if (nlmsg_parse(info->nlh, GENL_HDRLEN, attrs,
+			IPVS_CMD_ATTR_MAX, ip_vs_cmd_policy)) {
+    ret = -EINVAL;
+		goto out_err;
+  }
+
+
   switch (cmd_id) {
   case IPVS_CMD_GET_INFO:
 		NLA_PUT_U32(msg, IPVS_INFO_ATTR_VERSION, IP_VS_VERSION_CODE);
@@ -1804,9 +1845,7 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 			struct ip_vs_service *svc;
 
 			svc =
-			    ip_vs_genl_find_service(info->
-						    attrs
-						    [IPVS_CMD_ATTR_SERVICE]);
+			    ip_vs_genl_find_service(attrs[IPVS_CMD_ATTR_SERVICE]);
 			if (IS_ERR(svc)) {
 				ret = PTR_ERR(svc);
 				goto out_err;
@@ -1824,9 +1863,9 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 		}
   }
 
-	ret = ipvs_nl_send_message(info, msg);
+	ret = ipvs_nl_reply(info, msg);
   if (ret < 0)
-    OFP_ERR("ipvs_nl_send_message return %d\n", ret);
+    OFP_ERR("ipvs_nl_reply return %d\n", ret);
   goto out; 
 
 nla_put_failure:
@@ -1835,21 +1874,217 @@ nla_put_failure:
 
 out_err:
   nlmsg_free(msg);
+  ret = ipvs_nl_reply_error(info, reply_cmd, ret);
+  if (ret < 0)
+    OFP_ERR("nl reply return %d\n", ret);
+
 out:
 	mutex_unlock(&__ip_vs_mutex);
 
   return ret;
 }
 
-static int ip_vs_genl_dump_laddrs(struct nl_cache_ops *ops,
-                              struct genl_cmd *cmd,
-                              struct genl_info *info,
-                              void *arg)
+static int ip_vs_genl_fill_laddr(struct nl_msg *msg, struct ip_vs_laddr *laddr)
 {
+	struct nlattr *nl_laddr;
+
+	nl_laddr = nla_nest_start(msg, IPVS_CMD_ATTR_LADDR);
+	if (!nl_laddr)
+		return -EMSGSIZE;
+
+	NLA_PUT(msg, IPVS_LADDR_ATTR_ADDR, sizeof(laddr->addr), &laddr->addr);
+	NLA_PUT_U64(msg, IPVS_LADDR_ATTR_PORT_CONFLICT,
+		    atomic64_read(&laddr->port_conflict));
+	NLA_PUT_U32(msg, IPVS_LADDR_ATTR_CONN_COUNTS,
+		    atomic_read(&laddr->conn_counts));
+
+	nla_nest_end(msg, nl_laddr);
+
+	return 0;
+
+nla_put_failure:
+	nla_nest_cancel(msg, nl_laddr);
+	return -EMSGSIZE;
+}
+
+static int ip_vs_genl_dump_laddr(struct genl_info *info,
+                                 struct ip_vs_laddr *laddr) {
+	int ret;
+	struct nl_msg *msg;
+
+  if (!laddr) {
+		OFP_ERR("laddr is NULL\n");
+		return -EMSGSIZE;
+	}
+
+  msg = ipvs_nl_message(info, IPVS_CMD_NEW_LADDR, NLM_F_MULTI);
+	if (!msg)
+		return -EMSGSIZE;
+
+	if (ip_vs_genl_fill_laddr(msg, laddr) < 0)
+		goto nla_put_failure;
+
+  ret = ipvs_nl_reply(info, msg);
+  if (ret < 0)
+    OFP_ERR("ipvs_nl_reply return %d\n", ret);
+	return ret;
+
+nla_put_failure:
+	return -EMSGSIZE;
+}
+
+static int ip_vs_genl_dump_laddrs(struct nl_cache_ops *ops,
+                                  struct genl_cmd *cmd,
+                                  struct genl_info *info,
+                                  void *arg)
+{
+  int idx = 0;
+	int cpu;
+	int start = 0;
+  int ret = 0;
+	struct ip_vs_service *svc;
+	struct ip_vs_service *svc_per;
+	struct ip_vs_laddr *laddr;
+	struct nlattr *attrs[IPVS_CMD_ATTR_MAX + 1];
+
   (void)arg;
   (void)ops;
   OFP_INFO("Dump command: %s\n", cmd->c_name);
+
+	mutex_lock(&__ip_vs_mutex);
+
+	/* Try to find the service for which to dump destinations */
+	if (nlmsg_parse(info->nlh, GENL_HDRLEN, attrs,
+			IPVS_CMD_ATTR_MAX, ip_vs_cmd_policy))
+		goto out_err;
+
+	svc = ip_vs_genl_find_service(attrs[IPVS_CMD_ATTR_SERVICE]);
+	if (IS_ERR(svc) || svc == NULL) {
+    ret = -EINVAL;
+		goto out_err;
+  }
+
+	IP_VS_DBG_BUF(0, "vip %s:%d get local address \n",
+		      IP_VS_DBG_ADDR(svc->af, &svc->addr), ntohs(svc->port));
+
+	svc_per = svc->svc0;
+	for_each_online_cpu(cpu){
+		/* Dump the destinations */
+		list_for_each_entry(laddr, &svc_per->laddr_list, n_list) {
+			if (++idx <= start)
+				continue;
+
+			if (ip_vs_genl_dump_laddr(info, laddr) < 0) {
+				idx--;
+				goto nla_put_failure;
+			}
+		}
+		svc_per++;
+	}
+
+nla_put_failure:
+	//ip_vs_service_put(svc);
+
+out_err:
+  if (ret < 0)
+    ret = ipvs_nl_reply_error(info, IPVS_CMD_NEW_DEST, ret);
+  else
+    ret = ipvs_nl_multi_reply_done(info, IPVS_CMD_NEW_DEST);
+
+  if (ret < 0)
+    OFP_ERR("nl reply return %d\n", ret);
+	mutex_unlock(&__ip_vs_mutex);
   return 0;
+}
+
+static int ip_vs_genl_fill_dest(struct nl_msg *msg, struct ip_vs_dest *dest)
+{
+	u32 activeconns, inactconns, persistconns;
+	int cpu;
+	struct ip_vs_stats tmp_stats;
+	struct nlattr *nl_dest;
+	struct ip_vs_dest *per_dest;
+	struct ip_vs_service *svc;
+
+	nl_dest = nla_nest_start(msg, IPVS_CMD_ATTR_DEST);
+	if (!nl_dest)
+		return -EMSGSIZE;
+
+	NLA_PUT(msg, IPVS_DEST_ATTR_ADDR, sizeof(dest->addr), &dest->addr);
+	NLA_PUT_U16(msg, IPVS_DEST_ATTR_PORT, dest->port);
+
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_FWD_METHOD,
+		    atomic_read(&dest->conn_flags) & IP_VS_CONN_F_FWD_MASK);
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_WEIGHT, atomic_read(&dest->weight));
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_U_THRESH, dest->u_threshold);
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_L_THRESH, dest->l_threshold);
+
+	activeconns = 0;
+	inactconns = 0;
+	persistconns = 0;
+	memset((void*)(&tmp_stats), 0, sizeof(struct ip_vs_stats));
+	svc = dest->svc->svc0;
+	for_each_possible_cpu(cpu) {
+		per_dest = ip_vs_lookup_dest(svc, &dest->addr, dest->port);
+		if(per_dest == NULL) {
+			IP_VS_ERR_RL("%s():dest doesn't exist on cpu%d\n",
+					__func__, cpu);
+			goto nla_put_failure;
+		}
+
+		activeconns += atomic_read(&per_dest->activeconns);
+		inactconns += atomic_read(&per_dest->inactconns);
+		persistconns += atomic_read(&per_dest->persistconns);
+
+		tmp_stats.conns += per_dest->stats.conns;
+		tmp_stats.inpkts += per_dest->stats.inpkts;
+		tmp_stats.outpkts += per_dest->stats.outpkts;
+		tmp_stats.inbytes += per_dest->stats.inbytes;
+		tmp_stats.outbytes += per_dest->stats.outbytes;
+
+		svc++;
+	}
+
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_ACTIVE_CONNS, activeconns);
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_INACT_CONNS, inactconns);
+	NLA_PUT_U32(msg, IPVS_DEST_ATTR_PERSIST_CONNS, persistconns);
+
+	if (ip_vs_genl_fill_stats(msg, IPVS_DEST_ATTR_STATS, &tmp_stats))
+		goto nla_put_failure;
+
+	nla_nest_end(msg, nl_dest);
+
+	return 0;
+
+nla_put_failure:
+	nla_nest_cancel(msg, nl_dest);
+	return -EMSGSIZE;
+}
+
+static int ip_vs_genl_dump_dest(struct genl_info *info, struct ip_vs_dest *dest)
+{
+	int ret;
+	struct nl_msg *msg;
+
+	if (!dest) {
+		OFP_ERR("dest is NULL\n");
+		return -EMSGSIZE;
+	}
+
+  msg = ipvs_nl_message(info, IPVS_CMD_NEW_DEST, NLM_F_MULTI);
+	if (!msg)
+		return -EMSGSIZE;
+
+	if (ip_vs_genl_fill_dest(msg, dest) < 0)
+		goto nla_put_failure;
+
+	ret = ipvs_nl_reply(info, msg);
+  if (ret < 0)
+    OFP_ERR("ipvs_nl_reply return %d\n", ret);
+	return ret;
+
+nla_put_failure:
+	return -EMSGSIZE;
 }
 
 static int ip_vs_genl_dump_dests(struct nl_cache_ops *ops,
@@ -1857,10 +2092,59 @@ static int ip_vs_genl_dump_dests(struct nl_cache_ops *ops,
                               struct genl_info *info,
                               void *arg)
 {
+  int idx = 0;
+	int start = 0;
+  int ret = 0;
+	struct ip_vs_service *svc;
+	struct ip_vs_dest *dest;
+	struct nlattr *attrs[IPVS_CMD_ATTR_MAX + 1];
+
   (void)arg;
   (void)ops;
   OFP_INFO("Dump command: %s\n", cmd->c_name);
-  return 0;
+
+	mutex_lock(&__ip_vs_mutex);
+
+	/* Try to find the service for which to dump destinations */
+	if (nlmsg_parse(info->nlh, GENL_HDRLEN, attrs,
+			IPVS_CMD_ATTR_MAX, ip_vs_cmd_policy)) {
+    ret = -EINVAL;
+		goto out_err;
+  }
+
+	svc = ip_vs_genl_find_service(attrs[IPVS_CMD_ATTR_SERVICE]);
+	if (IS_ERR(svc)) {
+    ret = PTR_ERR(svc); 
+		goto out_err;
+  } else if (svc == NULL) {
+    ret = -ENOENT;  
+		goto out_err;
+  }
+
+	/* Dump the destinations */
+	list_for_each_entry(dest, &svc->destinations, n_list) {
+		if (++idx <= start)
+			continue;
+		if ((ret = ip_vs_genl_dump_dest(info, dest)) < 0) {
+			idx--;
+			goto nla_put_failure;
+		}
+	}
+
+nla_put_failure:
+//	ip_vs_service_put(svc);
+
+out_err:
+  if (ret < 0)
+    ret = ipvs_nl_reply_error(info, IPVS_CMD_NEW_DEST, ret);
+  else
+    ret = ipvs_nl_multi_reply_done(info, IPVS_CMD_NEW_DEST);
+
+  if (ret < 0)
+    OFP_ERR("nl reply return %d\n", ret);
+	mutex_unlock(&__ip_vs_mutex);
+
+  return ret;
 }
 
 static int ip_vs_genl_dump_daemons(struct nl_cache_ops *ops,
@@ -1893,9 +2177,9 @@ static int ip_vs_genl_dump_service(const struct genl_info *info,
 	if (ip_vs_genl_fill_service(msg, svc) < 0)
 		goto nla_put_failure;
 
-  ret = ipvs_nl_send_message(info, msg);
+  ret = ipvs_nl_reply(info, msg);
   if (ret < 0)
-    OFP_ERR("ipvs_nl_send_message return %d\n", ret);
+    OFP_ERR("ipvs_nl_reply return %d\n", ret);
 	return ret;
 
 nla_put_failure:
@@ -1935,7 +2219,7 @@ static int ip_vs_genl_dump_services(struct genl_cmd *cmd,
 		list_for_each_entry(svc, ip_vs_svc_tab + i, f_list) {
 			if (++idx <= start)
 				continue;
-			if (ip_vs_genl_dump_service(skb, svc, cb) < 0) {
+			if (ip_vs_genl_dump_service(msg, svc, cb) < 0) {
 				idx--;
 				goto nla_put_failure;
 			}
@@ -1944,9 +2228,13 @@ static int ip_vs_genl_dump_services(struct genl_cmd *cmd,
   */
 
 nla_put_failure:
-  ret = ipvs_nl_message_done(info, IPVS_CMD_NEW_SERVICE);
   if (ret < 0)
-    OFP_ERR("genl_send_simple return %d\n", ret);
+    ret = ipvs_nl_reply_error(info, IPVS_CMD_NEW_SERVICE, ret);
+  else
+    ret = ipvs_nl_multi_reply_done(info, IPVS_CMD_NEW_SERVICE);
+
+  if (ret < 0)
+    OFP_ERR("nl reply return %d\n", ret);
 	mutex_unlock(&__ip_vs_mutex);
 
   return ret;
@@ -2048,6 +2336,7 @@ static int ip_vs_genl_parse_laddr(struct ip_vs_laddr_user_kern *uladdr,
 {
 	struct nlattr *attrs[IPVS_LADDR_ATTR_MAX + 1];
 	struct nlattr *nla_addr;
+  (void)full_entry;
 
 	/* Parse mandatory identifying destination fields first */
 	if (nla == NULL ||
@@ -2067,6 +2356,7 @@ static int ip_vs_genl_parse_laddr(struct ip_vs_laddr_user_kern *uladdr,
 
 static inline void __ip_vs_get_timeouts(struct ip_vs_timeout_user *u)
 {
+  (void)u;
 #ifdef CONFIG_IP_VS_PROTO_TCP
 	u->tcp_timeout =
 	    ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_ESTABLISHED];
@@ -2136,6 +2426,7 @@ static int ip_vs_genl_set_cmd(struct nl_cache_ops *ops,
 	struct ip_vs_service_user_kern usvc;
 	struct ip_vs_dest_user_kern udest;
 	struct ip_vs_laddr_user_kern uladdr;
+	struct nlattr *attrs[IPVS_CMD_ATTR_MAX + 1];
 
 	int ret = 0;
 	int need_full_svc = 0, need_full_dest = 0;
@@ -2146,6 +2437,14 @@ static int ip_vs_genl_set_cmd(struct nl_cache_ops *ops,
   OFP_INFO("Set command: %d %s\n", cmd, genl_cmd->c_name);
 
   mutex_lock(&__ip_vs_mutex);
+
+  if (nlmsg_parse(info->nlh, GENL_HDRLEN, attrs,
+			IPVS_CMD_ATTR_MAX, ip_vs_cmd_policy)) {
+    ret = -EINVAL;
+		goto out;
+  }
+
+  info->attrs = attrs;
 
 	if (cmd == IPVS_CMD_FLUSH) {
 		ret = ip_vs_flush();
@@ -2241,14 +2540,17 @@ static int ip_vs_genl_set_cmd(struct nl_cache_ops *ops,
 		ret = -EINVAL;
 	}
 
-      out:
+out:
 //	if (svc)
 //		ip_vs_service_put(svc);
 	mutex_unlock(&__ip_vs_mutex);
 
-  ret = ipvs_nl_message_error(info, cmd, ret);
   if (ret < 0)
-    OFP_ERR("%s ipvs_nl_message_error return %d\n", __func__, ret);
+    OFP_ERR("%s error %d\n", __func__, ret);
+
+  ret = ipvs_nl_reply_error(info, cmd, ret);
+  if (ret < 0)
+    OFP_ERR("%s ipvs_nl_reply_error return %d\n", __func__, ret);
 	return ret; 
 }
 
@@ -2569,6 +2871,7 @@ cleanup:
 
 void ofp_vs_ctl_finish(void)
 {
+  ip_vs_trash_cleanup();
 	free_svc_tab();
   ip_vs_genl_unregister();
  

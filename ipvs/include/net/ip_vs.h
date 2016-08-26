@@ -243,7 +243,7 @@ struct rte_mbuf;
 
 struct ip_vs_protocol {
 	struct ip_vs_protocol *next;
-	char *name;
+	const char *name;
 	u16 protocol;
 	u16 num_states;
 	int dont_defrag;
@@ -578,12 +578,15 @@ struct ip_vs_laddr {
 	atomic_t conn_counts;	/* connects counts */
 };
 
+struct module {
+};
+#define THIS_MODULE NULL
 /*
  *	The scheduler object
  */
 struct ip_vs_scheduler {
 	struct list_head n_list;	/* d-linked list head */
-	char *name;		/* scheduler name */
+	const char *name;		/* scheduler name */
 	atomic_t refcnt;	/* reference counter */
 	struct module *module;	/* THIS_MODULE/NULL */
 

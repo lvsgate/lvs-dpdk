@@ -24,6 +24,9 @@ void ofp_vs_ctl_thread_start(odp_instance_t instance, int core_id);
 int ofp_vs_ctl_init(odp_instance_t instance, ofp_init_global_t *app_init_params);
 void ofp_vs_ctl_finish(void);
 
+int ip_vs_rr_init(void);
+void ip_vs_rr_cleanup(void);
+
 #define IP_VS_CONN_TAB_BITS	20
 #define IP_VS_CONN_TAB_SIZE     (1 << IP_VS_CONN_TAB_BITS)
 #define IP_VS_CONN_TAB_MASK     (IP_VS_CONN_TAB_SIZE - 1)

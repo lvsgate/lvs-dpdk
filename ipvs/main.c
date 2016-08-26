@@ -77,7 +77,7 @@ static void signal_handler(int signal)
         signal_name = "UNKNOWN";  break;
   }
   ofp_stop_processing();
-  printf("Recv signal %u (%s) exiting.\n", signal, signal_name);
+  fprintf(stderr, "Recv signal %u (%s) exiting.\n", signal, signal_name);
 }
 
 
