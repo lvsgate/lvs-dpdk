@@ -38,23 +38,6 @@ ofp_init_global_t app_init_params; /**< global OFP init parms */
 				strrchr((file_name), '/') + 1 : (file_name))
 
 
-/** local hook
- *
- * @param pkt odp_packet_t
- * @param protocol int
- * @return int
- *
- */
-static enum ofp_return_code fastpath_local_hook(odp_packet_t pkt, void *arg)
-{
-	int protocol = *(int *)arg;
-	(void) pkt;
-	(void) protocol;
-
-  //ofp_print_packet("local hook", pkt);
-	return OFP_PKT_CONTINUE;
-}
-
 
 static void signal_handler(int signal)
 {
@@ -163,7 +146,7 @@ int main(int argc, char *argv[])
 
 	app_init_params.if_count = params.if_count;
 	app_init_params.if_names = params.if_names;
-	app_init_params.pkt_hook[OFP_HOOK_LOCAL] = fastpath_local_hook;
+	app_init_params.pkt_hook[OFP_HOOK_LOCAL] = ofp_vs_in;
 	if (ofp_init_global(instance, &app_init_params)) {
 		OFP_ERR("Error: OFP global init failed.\n");
 		exit(EXIT_FAILURE);

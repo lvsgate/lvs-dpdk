@@ -11,13 +11,17 @@
 
 #include <rte_config.h>
 #include <rte_malloc.h>
+#include <rte_mempool.h>
 #include <rte_byteorder.h>
+#include <rte_mbuf.h>
 
 #include "ofp_vs_kern_compat.h"
+#include "ofp_vs_tcpip.h"
 #include "kern_list.h"
 #include "net/ip_vs.h"
 
 
+enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg);
 int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params);
 void ofp_vs_finish(void);
 void ofp_vs_ctl_thread_start(odp_instance_t instance, int core_id);

@@ -65,17 +65,20 @@ static atomic_t ip_vs_nullsvc_counter = ATOMIC_INIT(0);
 /* number of virtual services */
 static int ip_vs_num_services = 0;
 
+int sysctl_ip_vs_expire_quiescent_template = 1;
+int sysctl_ip_vs_expire_nodest_conn = 1;
+
 /*
  * sysctl for FULLNAT
  */
-/*
 int sysctl_ip_vs_timestamp_remove_entry = 1;
 int sysctl_ip_vs_mss_adjust_entry = 1;
 int sysctl_ip_vs_conn_reused_entry = 1;
 int sysctl_ip_vs_toa_entry = 1;
+extern int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1];
+/*
 static int ip_vs_entry_min = 0;
 static int ip_vs_entry_max = 1;
-extern int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1];
 */
 
 /*
@@ -116,10 +119,10 @@ static int ip_vs_synproxy_msg_store_thresh_max = 5;
 */
 
 /* local address port range */
-/*
 int sysctl_ip_vs_lport_max = 65535;
 int sysctl_ip_vs_lport_min = 5000;
 int sysctl_ip_vs_lport_tries = 10000;
+/*
 static int ip_vs_port_min = 1025;
 static int ip_vs_port_max = 65535;
 static int ip_vs_port_try_min = 10;
@@ -1029,7 +1032,7 @@ static inline int laddr_to_cpuid(int af, const union nf_inet_addr *addr)
 	else
 		seed = ntohl(addr->ip) & LADDR_MASK;
 
-	return seed % (odp_cpu_count() - sysctl_ip_vs_reserve_core) +
+	return seed % (rte_lcore_count() - sysctl_ip_vs_reserve_core) +
 					sysctl_ip_vs_reserve_core;
 }
 
@@ -1060,7 +1063,7 @@ ip_vs_new_laddr(struct ip_vs_service *svc, struct ip_vs_laddr_user_kern *uladdr,
 	laddr->af = svc->af;
 	ip_vs_addr_copy(svc->af, &laddr->addr, &uladdr->addr);
 	atomic64_set(&laddr->port_conflict, 0);
-	atomic64_set(&laddr->port, 0);
+	laddr->port = 0;
 	atomic_set(&laddr->refcnt, 0);
 	atomic_set(&laddr->conn_counts, 0);
 	laddr->cpuid = laddr_to_cpuid(svc->af, &uladdr->addr);

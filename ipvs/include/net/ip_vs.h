@@ -303,8 +303,8 @@ struct ip_vs_protocol {
 
 	int (*app_conn_bind) (struct ip_vs_conn * cp);
 
-	void (*debug_packet) (struct ip_vs_protocol * pp,
-			      const struct rte_mbuf * skb,
+	void (*debug_packet) (struct ip_vs_protocol *pp,
+			      const struct rte_mbuf *skb,
 			      int offset, const char *msg);
 
 	void (*timeout_change) (struct ip_vs_protocol * pp, int flags);
@@ -571,7 +571,7 @@ struct ip_vs_laddr {
 	u16 af;			/* address family */
 	u16 cpuid;		/* record the cpu laddr has been assigned */
 	union nf_inet_addr addr;	/* ip address */
-	atomic64_t port;	/* port counts */
+	u64 port;	/* port counts */
 	atomic_t refcnt;	/* reference count */
 
 	atomic64_t port_conflict;	/* conflict counts */
@@ -768,7 +768,7 @@ struct ip_vs_estats_mib {
 };
 
 #define IP_VS_INC_ESTATS(mib, field)         \
-        (per_cpu_ptr(mib, smp_processor_id())->mibs[field]++)
+        //(per_cpu_ptr(mib, smp_processor_id())->mibs[field]++)
 
 extern struct ip_vs_estats_mib *ip_vs_esmib;
 
@@ -937,7 +937,7 @@ ip_vs_set_state_timeout(int *table, int num, const char *const *names,
 			const char *name, int to);
 extern void
 ip_vs_tcpudp_debug_packet(struct ip_vs_protocol *pp,
-        const struct rte_mbuf *skb,
+			  const struct rte_mbuf *skb,
 			  int offset, const char *msg);
 
 extern struct ip_vs_protocol ip_vs_protocol_tcp;
@@ -1042,7 +1042,7 @@ extern void ip_vs_sync_conn(struct ip_vs_conn *cp);
 	(*per_cpu_ptr((stats), (cpu)))
 
 #define ip_vs_stats_this_cpu(stats) \
-	(*this_cpu_ptr((stats)))
+	(RTE_PER_LCORE(stats))
 
 extern int ip_vs_new_stats(struct ip_vs_stats** p);
 extern void ip_vs_del_stats(struct ip_vs_stats* p);

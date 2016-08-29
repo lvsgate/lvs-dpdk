@@ -9,8 +9,11 @@
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
+typedef uint64_t u64;
 
 #define IP_VS_POSSIBLE_CPU 32
+
+#define num_online_cpu() rte_lcore_count()
 
 #define DECLARE_PER_CPU(__type, __varname) \
 	extern __type __varname##_array[IP_VS_POSSIBLE_CPU]
@@ -83,6 +86,7 @@ typedef rte_atomic32_t atomic_t;
 #define atomic_set(__dst, __var) rte_atomic32_set(__dst, __var)
 #define atomic_read(__var) rte_atomic32_read(__var)
 #define atomic_dec_and_test(__var) rte_atomic32_dec_and_test(__var)
+#define atomic_add_return(__var, __dst) rte_atomic32_add_return(__dst, __var)
 
 typedef rte_atomic64_t atomic64_t;
 #define atomic64_inc(__var) rte_atomic64_inc(__var)
@@ -129,8 +133,6 @@ typedef rte_atomic64_t atomic64_t;
 
 #define PROT_SOCK 1024
 
-#define jiffies rte_get_timer_cycles()
-
 #define pr_err(__fmt, args...) \
 	OFP_ERR( __fmt, ##args)
 
@@ -175,5 +177,8 @@ static inline const void *ERR_CAST(const void *ptr)
 	return (const void *) ptr;
 }
 
+#define NF_ACCEPT OFP_PKT_CONTINUE
+#define NF_STOLEN OFP_PKT_ON_HOLD
+#define NF_DROP OFP_PKT_DROP
 
 #endif
