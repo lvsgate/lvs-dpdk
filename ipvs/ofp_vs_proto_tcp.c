@@ -395,14 +395,35 @@ static void tcp_opt_remove_timestamp(struct tcphdr *tcph)
 {
 	if (sysctl_ip_vs_timestamp_remove_entry == 0)
 		return;
+}
 
+static u32 net_secret;
+static uint64_t rte_hz;
+
+static int net_secret_init(void)
+{
+	return odp_random_data((uint8_t *)&net_secret, sizeof(net_secret), true);
+}
+
+static __u32 secure_tcp_sequence_number(__be32 saddr, __be32 daddr,
+				 __be16 sport, __be16 dport)
+{
+	u32 hash[4];
+
+	hash[0] = (u32)saddr;
+	hash[1] = (u32)daddr;
+	hash[2] = ((u16)sport << 16) + (u16)dport;
+	hash[3] = net_secret;
+
+	return rte_hash_crc((void *)hash, sizeof(hash), net_secret) + 
+		((__u64)(1E6*(rte_get_timer_cycles()/rte_hz)) >> 6);
 }
 
 /*
  * recompute tcp sequence, OUTside to INside;
  */
 static void
-tcp_in_init_seq(struct ip_vs_conn *cp, struct sk_buff *skb, struct tcphdr *tcph)
+tcp_in_init_seq(struct ip_vs_conn *cp, struct rte_mbuf *skb, struct tcphdr *tcph)
 {
 	struct ip_vs_seq *fseq = &(cp->fnat_seq);
 	__u32 seq = ntohl(tcph->seq);
@@ -812,6 +833,8 @@ tcp_state_transition(struct ip_vs_conn *cp, int direction,
 
 static void ip_vs_tcp_init(struct ip_vs_protocol *pp)
 {
+	rte_hz = rte_get_timer_hz();
+	net_secret_init();
 	pp->timeout_table = sysctl_ip_vs_tcp_timeouts;
 }
 

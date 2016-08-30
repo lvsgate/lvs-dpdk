@@ -89,12 +89,12 @@ int main(int argc, char *argv[])
 	memset(&signal_action, 0, sizeof(signal_action));
 	signal_action.sa_handler = signal_handler;
 	sigfillset(&signal_action.sa_mask);
-	sigaction(SIGILL,  &signal_action, NULL);
-	sigaction(SIGFPE,  &signal_action, NULL);
-	sigaction(SIGSEGV, &signal_action, NULL);
+	//sigaction(SIGILL,  &signal_action, NULL);
+	//sigaction(SIGFPE,  &signal_action, NULL);
+	//sigaction(SIGSEGV, &signal_action, NULL);
 	sigaction(SIGTERM, &signal_action, NULL);
 	sigaction(SIGINT, &signal_action, NULL);
-	sigaction(SIGBUS,  &signal_action, NULL);
+	//sigaction(SIGBUS,  &signal_action, NULL);
 	signal(SIGPIPE, SIG_IGN);
 
 	getrlimit(RLIMIT_CORE, &rlp);
@@ -140,13 +140,14 @@ int main(int argc, char *argv[])
 	num_workers = odp_cpumask_default_worker(&cpumask, num_workers);
 	odp_cpumask_to_str(&cpumask, cpumaskstr, sizeof(cpumaskstr));
 
+	printf("odp_cpu_count : %i\n", core_count);
 	printf("Num worker threads: %i\n", num_workers);
 	printf("first CPU:          %i\n", odp_cpumask_first(&cpumask));
 	printf("cpu mask:           %s\n", cpumaskstr);
 
 	app_init_params.if_count = params.if_count;
 	app_init_params.if_names = params.if_names;
-	app_init_params.pkt_hook[OFP_HOOK_LOCAL] = ofp_vs_in;
+	app_init_params.pkt_hook[OFP_HOOK_PREROUTING] = ofp_vs_in;
 	if (ofp_init_global(instance, &app_init_params)) {
 		OFP_ERR("Error: OFP global init failed.\n");
 		exit(EXIT_FAILURE);

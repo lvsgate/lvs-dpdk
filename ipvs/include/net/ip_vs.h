@@ -110,24 +110,26 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 	return &buf[*idx - len];
 }
 
-#define IP_VS_DBG(__level, __fmt, args...) \
-	OFP_DBG(__fmt, ##args)
+#define IP_VS_DBG(__level, __fmt, args...)		\
+	do {						\
+		if (__level <= ip_vs_get_debug_level())	\
+			OFP_INFO(__fmt, ##args);	\
+	} while (0)
 
 
 #define IP_VS_DBG_BUF(__level, __fmt, args...) 			\
 	do { 							\
 		char ip_vs_dbg_buf[160];			\
 		int ip_vs_dbg_idx = 0;				\
-		if (ip_vs_get_debug_level() >= OFP_LOG_DEBUG)	\
-			OFP_DBG(__fmt, ##args);		\
+		if (__level <= ip_vs_get_debug_level())		\
+			OFP_INFO(__fmt, ##args);		\
 	} while (0)
 
 #define IP_VS_ERR_BUF(__fmt, args...)				\
 	do { 							\
 		char ip_vs_dbg_buf[160];			\
 		int ip_vs_dbg_idx = 0;				\
-		if (ip_vs_get_debug_level() >= OFP_LOG_DEBUG)	\
-			OFP_DBG(__fmt, ##args);		\
+		OFP_ERR(__fmt, ##args);		\
 	} while (0)
 
 #define IP_VS_DBG_ADDR(af, addr)					\
@@ -136,9 +138,9 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 		       &ip_vs_dbg_idx)
 
 
-#define IP_VS_DBG_PKT(level, pp, skb, ofs, msg)			\
+#define IP_VS_DBG_PKT(__level, pp, skb, ofs, msg)			\
 	do {							\
-		if (ip_vs_get_debug_level() >= OFP_LOG_DEBUG)	\
+		if (__level <= ip_vs_get_debug_level())		\
 			pp->debug_packet(pp, skb, ofs, msg);	\
 	} while (0)
 
@@ -146,11 +148,17 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 #define IP_VS_DBG_RL(msg...)  do {} while (0)
 #define IP_VS_DBG_RL_PKT(level, pp, skb, ofs, msg)	do {} while (0)
 
-#define EnterFunction(__level) \
-	OFP_DBG("Enter\n")
+#define EnterFunction(__level) 					\
+	do {							\
+		if (__level <= ip_vs_get_debug_level())		\
+			OFP_INFO("%s Enter\n", __func__);	\
+	} while (0)
 
-#define LeaveFunction(__level) \
-	OFP_DBG("Lever\n")
+#define LeaveFunction(__level) 					\
+	do {							\
+		if (__level <= ip_vs_get_debug_level())		\
+			OFP_INFO("%s Leave\n", __func__);	\
+	} while (0)
 
 #else  /* NO DEBUGGING at ALL */
 

@@ -65,6 +65,11 @@ static atomic_t ip_vs_nullsvc_counter = ATOMIC_INIT(0);
 /* number of virtual services */
 static int ip_vs_num_services = 0;
 
+/* 1/rate drop and drop-entry variables */
+int ip_vs_drop_rate = 0;
+int ip_vs_drop_counter = 0;
+
+/* sysctl variables */
 int sysctl_ip_vs_expire_quiescent_template = 1;
 int sysctl_ip_vs_expire_nodest_conn = 1;
 
@@ -142,17 +147,17 @@ int sysctl_ip_vs_fast_xmit = 1;
 /* L2 fast xmit, inside (to RS) */
 int sysctl_ip_vs_fast_xmit_inside = 1;
 /* msg csum offload */
-int sysctl_ip_vs_csum_offload = 1;
+int sysctl_ip_vs_csum_offload = 0;
 
 /* reserve core for the control flow */
-int sysctl_ip_vs_reserve_core = 0;
+int sysctl_ip_vs_reserve_core = 1;
 /*
 static int ip_vs_reserve_core_min = 0;
 static int ip_vs_reserve_core_max = 6;
 */
 
 #ifdef CONFIG_IP_VS_DEBUG
-static int sysctl_ip_vs_debug_level = 0;
+static int sysctl_ip_vs_debug_level = 12;
 
 int ip_vs_get_debug_level(void)
 {
@@ -1025,6 +1030,7 @@ ip_vs_del_dest(struct ip_vs_service *svc, struct ip_vs_dest_user_kern *udest)
 #define LADDR_MASK 0x000000ff
 static inline int laddr_to_cpuid(int af, const union nf_inet_addr *addr)
 {
+	/*
 	u32 seed;
 
 	if(af == AF_INET6)
@@ -1034,6 +1040,21 @@ static inline int laddr_to_cpuid(int af, const union nf_inet_addr *addr)
 
 	return seed % (rte_lcore_count() - sysctl_ip_vs_reserve_core) +
 					sysctl_ip_vs_reserve_core;
+	*/
+	unsigned lcore_id;
+	unsigned seed;
+	unsigned pos;
+	int idx = 0;
+
+	seed = rte_be_to_cpu_32(addr->ip) & LADDR_MASK;
+	pos = seed % rte_lcore_count(); 
+
+	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+		if (idx++ == pos)
+			break;
+	}
+
+	return lcore_id;
 }
 
 void ip_vs_laddr_hold(struct ip_vs_laddr *laddr)
@@ -2755,7 +2776,7 @@ static void *ofp_vs_ctl_thread(void *arg)
 		if ((err = -nl_recvmsgs_default(sock)) > 0) {
 			OFP_ERR("nl_recvmsgs_default return %d\n", err);
 		}
-		OFP_DBG("nl recv data\n");
+		//OFP_DBG("nl recv data\n");
 	}
 
 out:

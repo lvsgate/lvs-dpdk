@@ -171,12 +171,12 @@ struct ip_vs_conn *ip_vs_schedule(struct ip_vs_service *svc,
 		return NULL;
 
 	IP_VS_DBG_BUF(6, "Schedule fwd:%c c:%s:%u v:%s:%u "
-		      "d:%s:%u conn->flags:%X conn->refcnt:%d\n",
+		      "d:%s:%u conn->flags:%X conn->refcnt:%d cpu%d\n",
 		      ip_vs_fwd_tag(cp),
 		      IP_VS_DBG_ADDR(svc->af, &cp->caddr), ntohs(cp->cport),
 		      IP_VS_DBG_ADDR(svc->af, &cp->vaddr), ntohs(cp->vport),
 		      IP_VS_DBG_ADDR(svc->af, &cp->daddr), ntohs(cp->dport),
-		      cp->flags, atomic_read(&cp->refcnt));
+		      cp->flags, atomic_read(&cp->refcnt), cp->cpuid);
 
 	ip_vs_conn_stats(cp, svc);
 	return cp;
@@ -385,8 +385,6 @@ enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg)
 
 	ip_vs_conn_put(cp);
 	return ret;
-
-	return NF_ACCEPT;
 }
 
 int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params)
@@ -396,18 +394,25 @@ int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params)
 	if ((ret = ofp_vs_ctl_init(instance, app_init_params)) < 0)
 		return ret;
 
+	if ((ret = ip_vs_protocol_init() < 0))
+		return ret;
+
+
+	if ((ret = ip_vs_conn_init()) < 0)
+		return ret;
+
+	
 	if ((ret = ip_vs_rr_init()) < 0)
 		return ret;
 
-	if ((ret = ip_vs_protocol_init() < 0))
-		return ret;
 
 	return ret;
 }
 
 void ofp_vs_finish(void)
 {
-	ip_vs_protocol_cleanup();
 	ip_vs_rr_cleanup();
+	ip_vs_protocol_cleanup();
+	ip_vs_conn_cleanup();
 	ofp_vs_ctl_finish();
 }

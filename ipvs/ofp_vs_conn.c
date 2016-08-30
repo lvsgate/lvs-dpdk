@@ -412,9 +412,14 @@ void ip_vs_conn_put(struct ip_vs_conn *cp)
 
 	/* reset it expire in its timeout */
 	//mod_timer(&cp->timer, jiffies + timeout);
-	if (ofp_timer_cancel(cp->timer) == 0)
-		ofp_timer_start_cpu_id(cp->timeout*1000000UL,
-					ip_vs_conn_expire, cp, sizeof(cp),
+	if (cp->timer != ODP_TIMER_INVALID &&
+	    ofp_timer_cancel(cp->timer) != 0)
+		OFP_ERR("ofp_timer_cancel failed\n");
+
+
+	cp->timer = ofp_timer_start_cpu_id(cp->timeout*1000000UL,
+					ip_vs_conn_expire, &cp,
+					sizeof(struct ip_vs_conn *),
 					cp->cpuid);
 
 	__ip_vs_conn_put(cp);
@@ -885,6 +890,7 @@ static void ip_vs_conn_del(struct ip_vs_conn *cp)
 
 	/* delete the timer if it is activated by other users */
 	ofp_timer_cancel(cp->timer);
+	cp->timer = ODP_TIMER_INVALID; 
 
 	/* does anybody control me? */
 	if (cp->control)
@@ -901,17 +907,18 @@ static void ip_vs_conn_del(struct ip_vs_conn *cp)
 	/* __get_cpu_var(ip_vs_conn_cnt_per)-- */
 	per_cpu(ip_vs_conn_cnt_per, cp->cpuid)--;
 
-	rte_mempool_put(rte_mempool_from_obj((void *)cp->in_idx),
-			(void *)cp->in_idx);
+	rte_mempool_put(rte_mempool_from_obj((void *)cp), (void *)cp);
 	cp = NULL;
 }
 
 static void ip_vs_conn_expire(void *data)
 {
 	int cpu;
-	struct ip_vs_conn *cp = (struct ip_vs_conn *)data;
+	struct ip_vs_conn *cp = *(struct ip_vs_conn **)data;
 	struct rte_mbuf *tmp_skb = NULL;
 	struct ip_vs_protocol *pp = ip_vs_proto_get(cp->protocol);
+
+	EnterFunction(10);
 
 	/*
 	 * Set proper timeout.
@@ -919,7 +926,7 @@ static void ip_vs_conn_expire(void *data)
 	if ((pp != NULL) && (pp->timeout_table != NULL)) {
 		cp->timeout = pp->timeout_table[cp->state];
 	} else {
-		cp->timeout = 60 * HZ;
+		cp->timeout = 60;
 	}
 
 	/*
@@ -948,6 +955,7 @@ static void ip_vs_conn_expire(void *data)
 		/* statistics */
 		IP_VS_INC_ESTATS(ip_vs_esmib, SYNPROXY_RS_ERROR);
 		spin_unlock(&cp->lock);
+		IP_VS_DBG(12, "retry send syn to rs\n");
 		goto expire_later;
 	}
 	spin_unlock(&cp->lock);
@@ -955,14 +963,18 @@ static void ip_vs_conn_expire(void *data)
 	/*
 	 *      do I control anybody?
 	 */
-	if (atomic_read(&cp->n_control))
+	if (atomic_read(&cp->n_control)) {
+		IP_VS_DBG(12, "cp->n_control not zero\n");
 		goto expire_later;
+	}
 
 	/*
 	 *      unhash it if it is hashed in the conn table
 	 */
-	if (!ip_vs_conn_unhash(cp) && !(cp->flags & IP_VS_CONN_F_ONE_PACKET))
+	if (!ip_vs_conn_unhash(cp) && !(cp->flags & IP_VS_CONN_F_ONE_PACKET)) {
+		IP_VS_DBG(12, "ip_vs_conn_unhash failed\n");
 		goto expire_later;
+	}
 
 	/*
 	 *      refcnt==1 implies I'm the only one referrer
@@ -970,6 +982,7 @@ static void ip_vs_conn_expire(void *data)
 	if (likely(atomic_read(&cp->refcnt) == 1)) {
 		/* delete the timer if it is activated by other users */
 		ofp_timer_cancel(cp->timer);
+		cp->timer = ODP_TIMER_INVALID; 
 
 		/* does anybody control me? */
 		if (cp->control)
@@ -1001,8 +1014,8 @@ static void ip_vs_conn_expire(void *data)
 			cp->syn_skb = NULL;
 		}
 
-		rte_mempool_put(rte_mempool_from_obj((void *)cp->in_idx),
-				(void *)cp->in_idx);
+		rte_mempool_put(rte_mempool_from_obj((void *)cp), (void *)cp);
+		LeaveFunction(10);
 		return;
 	}
 
@@ -1014,13 +1027,17 @@ static void ip_vs_conn_expire(void *data)
 		  atomic_read(&cp->refcnt) - 1, atomic_read(&cp->n_control));
 
 	ip_vs_conn_put(cp);
+	
+	LeaveFunction(10);
 }
 
 void ip_vs_conn_expire_now(struct ip_vs_conn *cp)
 {
-	if (ofp_timer_cancel(cp->timer) == 0)
-		ofp_timer_start_cpu_id(0, ip_vs_conn_expire, cp, sizeof(cp),
-					cp->cpuid); 
+	if (cp->timer != ODP_TIMER_INVALID)
+		ofp_timer_cancel(cp->timer);
+
+	cp->timer = ofp_timer_start_cpu_id(0, ip_vs_conn_expire,
+			&cp, sizeof(struct ip_vs_conn *), cp->cpuid); 
 }
 
 /*
@@ -1037,6 +1054,8 @@ struct ip_vs_conn *ip_vs_conn_new(int af, int proto,
 	struct ip_vs_protocol *pp = ip_vs_proto_get(proto);
 	struct ip_vs_conn_idx *ci_idx, *co_idx;
 	struct tcphdr *th;
+	int cpuid = smp_processor_id();
+	int ret;
 
 	if ( (sysctl_ip_vs_conn_max_num != 0) && ((num_online_cpu() *
 				__get_cpu_var(ip_vs_conn_cnt_per)) >=
@@ -1045,10 +1064,10 @@ struct ip_vs_conn *ip_vs_conn_new(int af, int proto,
 		return NULL;
 	}
 
-	cp = rte_mempool_get(__get_cpu_var(ip_vs_conn_cachep),
-			(void **)&ci_idx);
-	if (cp == NULL) {
-		IP_VS_ERR_RL("%s(): no memory\n", __func__);
+	ret = rte_mempool_get(per_cpu(ip_vs_conn_cachep, cpuid),
+			(void **)&cp);
+	if (ret != 0) {
+		IP_VS_ERR_RL("%s(): no memory cpu%d\n", __func__, cpuid);
 		return NULL;
 	}
 
@@ -1082,6 +1101,7 @@ struct ip_vs_conn *ip_vs_conn_new(int af, int proto,
 
 	/* now init connection */
 	//setup_timer(&cp->timer, ip_vs_conn_expire, (unsigned long)cp);
+	cp->timer = ODP_TIMER_INVALID;
 	cp->af = af;
 	cp->protocol = proto;
 	ip_vs_addr_copy(af, &cp->caddr, caddr);
@@ -1116,10 +1136,10 @@ struct ip_vs_conn *ip_vs_conn_new(int af, int proto,
 
 	/* Set its state and timeout */
 	cp->state = 0;
-	cp->timeout = 3 * HZ;
+	cp->timeout = 3;
 
 	/* Save the current CPU ID */
-	cp->cpuid = smp_processor_id();
+	cp->cpuid = cpuid;
 
 	/* Bind its packet transmitter */
 #ifdef CONFIG_IP_VS_IPV6
@@ -1421,9 +1441,12 @@ static void ip_vs_conn_flush(void)
 		/* the counter may be not 0, because maybe some conn entries
 		 *  are run by slow timer handler
 		 * or unhashed but still referred */
+		/*
 		if (per_cpu(ip_vs_conn_cnt_per, cpu) != 0) {
+			sleep(1);
 			goto flush_again;
 		}
+		*/
 	}
 }
 
@@ -1487,8 +1510,7 @@ int ip_vs_conn_init(void)
 		char mempool_name[RTE_MEMPOOL_NAMESIZE];
 		unsigned socket_id = rte_lcore_to_socket_id(cpu);
 
-		pool_size = sysctl_ip_vs_conn_max_num/
-			(rte_lcore_count() - sysctl_ip_vs_reserve_core),
+		pool_size = sysctl_ip_vs_conn_max_num/rte_lcore_count(),
 
 		sprintf(mempool_name, "ip_vs_conn_pool%d", cpu);
 		per_cpu(ip_vs_conn_cachep, cpu) =
@@ -1506,6 +1528,7 @@ int ip_vs_conn_init(void)
 			}
 			return -ENOMEM;
 		}
+		OFP_INFO("%s is created.\n", mempool_name);
 	}
 
 	pr_info("Connection hash table configured "
@@ -1552,7 +1575,6 @@ void ip_vs_conn_cleanup(void)
 	//proc_net_remove(&init_net, "ip_vs_conn_sync");
 	for_each_possible_cpu(cpu) {
 		/* Release the empty cache */
-		//rte_mempool_free(per_cpu(ip_vs_conn_cachep, cpu));
 		rte_free(per_cpu(ip_vs_conn_tab_percpu, cpu));
 	}
 }

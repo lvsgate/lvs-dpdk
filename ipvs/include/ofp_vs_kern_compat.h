@@ -36,7 +36,7 @@ typedef uint64_t u64;
 #define num_possible_cpus() IP_VS_POSSIBLE_CPU
 
 #define for_each_online_cpu(__cpu) \
-	RTE_LCORE_FOREACH(__cpu)
+	for (__cpu=0; __cpu<odp_cpu_count(); __cpu++)
 
 #define smp_processor_id() rte_lcore_id() 
 
