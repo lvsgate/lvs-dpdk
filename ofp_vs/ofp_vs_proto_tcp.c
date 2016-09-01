@@ -398,7 +398,6 @@ static void tcp_opt_remove_timestamp(struct tcphdr *tcph)
 }
 
 static u32 net_secret;
-static uint64_t rte_hz;
 
 static int net_secret_init(void)
 {
@@ -833,7 +832,6 @@ tcp_state_transition(struct ip_vs_conn *cp, int direction,
 
 static void ip_vs_tcp_init(struct ip_vs_protocol *pp)
 {
-	rte_hz = rte_get_timer_hz();
 	net_secret_init();
 	pp->timeout_table = sysctl_ip_vs_tcp_timeouts;
 }

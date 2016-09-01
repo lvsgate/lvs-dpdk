@@ -113,7 +113,7 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 #define IP_VS_DBG(__level, __fmt, args...)		\
 	do {						\
 		if (__level <= ip_vs_get_debug_level())	\
-			OFP_INFO(__fmt, ##args);	\
+			OFP_DBG(__fmt, ##args);	\
 	} while (0)
 
 
@@ -122,7 +122,7 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 		char ip_vs_dbg_buf[160];			\
 		int ip_vs_dbg_idx = 0;				\
 		if (__level <= ip_vs_get_debug_level())		\
-			OFP_INFO(__fmt, ##args);		\
+			OFP_DBG(__fmt, ##args);		\
 	} while (0)
 
 #define IP_VS_ERR_BUF(__fmt, args...)				\
@@ -151,13 +151,13 @@ static inline const char *ip_vs_dbg_addr(int af, char *buf, size_t buf_len,
 #define EnterFunction(__level) 					\
 	do {							\
 		if (__level <= ip_vs_get_debug_level())		\
-			OFP_INFO("%s Enter\n", __func__);	\
+			OFP_DBG("%s Enter\n", __func__);	\
 	} while (0)
 
 #define LeaveFunction(__level) 					\
 	do {							\
 		if (__level <= ip_vs_get_debug_level())		\
-			OFP_INFO("%s Leave\n", __func__);	\
+			OFP_DBG("%s Leave\n", __func__);	\
 	} while (0)
 
 #else  /* NO DEBUGGING at ALL */
@@ -377,8 +377,14 @@ struct ip_vs_conn {
 
 	/* counter and timer */
 	atomic_t refcnt;	/* reference count */
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	struct rte_timer timer;
+#else
 	odp_timer_t timer;	/* Expiration timer */
+	uint64_t expires;
+#endif
 	volatile unsigned long timeout;	/* timeout */
+	uint64_t next_expires;
 
 	/* Flags and state transition */
 	spinlock_t lock;	/* lock for state transition */

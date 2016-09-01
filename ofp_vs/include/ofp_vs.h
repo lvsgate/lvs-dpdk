@@ -22,6 +22,7 @@
 #include "kern_list.h"
 #include "net/ip_vs.h"
 
+extern uint64_t rte_hz;
 
 enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg);
 int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params);

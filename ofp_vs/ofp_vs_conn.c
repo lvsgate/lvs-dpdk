@@ -397,8 +397,46 @@ struct ip_vs_conn *ip_vs_ct_in_get
 	return cp;
 }
 
-
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+static void ip_vs_conn_expire(struct rte_timer *timer, void *data);
+#else
 static void ip_vs_conn_expire(void *data);
+#endif
+
+static inline int mod_timer(struct ip_vs_conn *cp, uint64_t to_ticks)
+{
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	return rte_timer_reset(&cp->timer,
+			to_ticks,
+			SINGLE,	cp->cpuid, ip_vs_conn_expire, cp);
+#else
+	if (ofp_timer_cancel(cp->timer) < 0)
+		OFP_ERR("ofp_timer_cancel(%d) failed\n", cp->timer);
+	cp->timer = ofp_timer_start_cpu_id(1000000UL*(to_ticks/HZ),
+					ip_vs_conn_expire, &cp,
+					sizeof(struct ip_vs_conn *),
+					cp->cpuid);
+	cp->expires = ofp_timer_ticks(0) + to_ticks;
+	if (cp->timer == ODP_TIMER_INVALID) {
+		OFP_ERR("ofp_timer_start_cpu_id return"
+			" ODP_TIMER_INVALID\n");
+		return -1;
+	}
+	return 0;
+#endif
+}
+
+static inline void del_timer(struct ip_vs_conn *cp)
+{
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	if (rte_timer_stop(&cp->timer) < 0)
+		OFP_ERR("rte_timer_stop failed\n");
+#else
+	if (ofp_timer_cancel(cp->timer) < 0)
+		OFP_ERR("ofp_timer_cancel(%d) failed\n", cp->timer);
+	cp->timer = ODP_TIMER_INVALID; 
+#endif
+}
 
 /*
  *      Put back the conn and restart its timer with its timeout
@@ -406,22 +444,39 @@ static void ip_vs_conn_expire(void *data);
 void ip_vs_conn_put(struct ip_vs_conn *cp)
 {
 	unsigned long timeout = cp->timeout;
+	uint64_t ticks;
+	uint64_t to_ticks;
+	int ret;
 
 	if (cp->flags & IP_VS_CONN_F_ONE_PACKET)
 		timeout = 0;
 
 	/* reset it expire in its timeout */
 	//mod_timer(&cp->timer, jiffies + timeout);
-	if (cp->timer != ODP_TIMER_INVALID &&
-	    ofp_timer_cancel(cp->timer) != 0)
-		OFP_ERR("ofp_timer_cancel failed\n");
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	to_ticks = timeout*rte_hz;
+	cycles = rte_get_timer_cycles();
 
+	if (cp->next_expires == 0 ||
+	    (cp->timer.expire > (ticks + to_ticks)) || 
+	    (cp->timer.expire <= ticks)) {
+		mod_timer(cp, to_ticks);
+	}
+	cp->next_expires = ticks + to_ticks;
+#else
+	ticks = ofp_timer_ticks(0); 
+	to_ticks = odp_timer_ns_to_tick(ofp_timer(0),
+				timeout*ODP_TIME_SEC_IN_NS);
 
-	cp->timer = ofp_timer_start_cpu_id(cp->timeout*1000000UL,
-					ip_vs_conn_expire, &cp,
-					sizeof(struct ip_vs_conn *),
-					cp->cpuid);
-
+	if (cp->next_expires == 0 ||
+	    (cp->expires > (ticks + to_ticks)) || 
+	    (cp->expires <= ticks)) {
+		mod_timer(cp, to_ticks);
+	}
+	cp->next_expires = ticks + to_ticks; 	
+	OFP_DBG("%s cp->timer=%d to_ticks=%lu\n",
+		__func__, cp->timer, to_ticks);
+#endif
 	__ip_vs_conn_put(cp);
 }
 
@@ -889,8 +944,7 @@ static void ip_vs_conn_del(struct ip_vs_conn *cp)
 		return;
 
 	/* delete the timer if it is activated by other users */
-	ofp_timer_cancel(cp->timer);
-	cp->timer = ODP_TIMER_INVALID; 
+	del_timer(cp);
 
 	/* does anybody control me? */
 	if (cp->control)
@@ -911,14 +965,39 @@ static void ip_vs_conn_del(struct ip_vs_conn *cp)
 	cp = NULL;
 }
 
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+static void ip_vs_conn_expire(struct rte_timer *timer, void *data)
+#else
 static void ip_vs_conn_expire(void *data)
+#endif
 {
 	int cpu;
+
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	struct ip_vs_conn *cp = (struct ip_vs_conn *)data;
+#else
 	struct ip_vs_conn *cp = *(struct ip_vs_conn **)data;
+#endif
 	struct rte_mbuf *tmp_skb = NULL;
 	struct ip_vs_protocol *pp = ip_vs_proto_get(cp->protocol);
 
 	EnterFunction(10);
+
+	/*
+	 *      hey, I'm using it
+	 */
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	if (cp->next_expires > rte_get_timer_cycles()) {
+		mod_timer(cp, cp->next_expires - rte_get_timer_cycles());  
+		return;
+	}
+#else
+	if (cp->next_expires > ofp_timer_ticks(0)) {
+		cp->timer = ODP_TIMER_INVALID;
+		mod_timer(cp, cp->next_expires - ofp_timer_ticks(0));  
+		return;
+	}
+#endif
 
 	/*
 	 * Set proper timeout.
@@ -928,10 +1007,7 @@ static void ip_vs_conn_expire(void *data)
 	} else {
 		cp->timeout = 60;
 	}
-
-	/*
-	 *      hey, I'm using it
-	 */
+	
 	atomic_inc(&cp->refcnt);
 	cpu = cp->cpuid;
 	if(unlikely(cpu != smp_processor_id())) {
@@ -981,8 +1057,12 @@ static void ip_vs_conn_expire(void *data)
 	 */
 	if (likely(atomic_read(&cp->refcnt) == 1)) {
 		/* delete the timer if it is activated by other users */
-		ofp_timer_cancel(cp->timer);
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+		if (rte_timer_stop(&cp->timer) < 0)	
+			OFP_ERR("rte_timer_stop failed\n");
+#else
 		cp->timer = ODP_TIMER_INVALID; 
+#endif
 
 		/* does anybody control me? */
 		if (cp->control)
@@ -1033,11 +1113,10 @@ static void ip_vs_conn_expire(void *data)
 
 void ip_vs_conn_expire_now(struct ip_vs_conn *cp)
 {
-	if (cp->timer != ODP_TIMER_INVALID)
-		ofp_timer_cancel(cp->timer);
+	int ret;
 
-	cp->timer = ofp_timer_start_cpu_id(0, ip_vs_conn_expire,
-			&cp, sizeof(struct ip_vs_conn *), cp->cpuid); 
+	cp->next_expires = 0;
+	mod_timer(cp, 0);
 }
 
 /*
@@ -1100,8 +1179,13 @@ struct ip_vs_conn *ip_vs_conn_new(int af, int proto,
 	co_idx->cp = cp;
 
 	/* now init connection */
+#ifdef CONFIG_OFP_VS_RTE_TIMER
+	rte_timer_init(&cp->timer);
+#else
 	//setup_timer(&cp->timer, ip_vs_conn_expire, (unsigned long)cp);
 	cp->timer = ODP_TIMER_INVALID;
+#endif
+	cp->next_expires = 0;
 	cp->af = af;
 	cp->protocol = proto;
 	ip_vs_addr_copy(af, &cp->caddr, caddr);
@@ -1301,7 +1385,7 @@ static int ip_vs_conn_seq_show(struct seq_file *seq, void *v)
 				   &cp->laddr.in6, ntohs(cp->lport),
 				   &cp->daddr.in6, ntohs(cp->dport),
 				   ip_vs_state_name(cp->protocol, cp->state),
-				   (cp->timer.expires - jiffies) / HZ);
+				   (cp->timer.expire - jiffies) / HZ);
 		else
 #endif
 			seq_printf(seq,
@@ -1313,7 +1397,7 @@ static int ip_vs_conn_seq_show(struct seq_file *seq, void *v)
 				   ntohl(cp->laddr.ip), ntohs(cp->lport),
 				   ntohl(cp->daddr.ip), ntohs(cp->dport),
 				   ip_vs_state_name(cp->protocol, cp->state),
-				   (cp->timer.expires - jiffies) / HZ);
+				   (cp->timer.expire - jiffies) / HZ);
 	}
 	return 0;
 }
@@ -1366,7 +1450,7 @@ static int ip_vs_conn_sync_seq_show(struct seq_file *seq, void *v)
 				   &cp->daddr.in6, ntohs(cp->dport),
 				   ip_vs_state_name(cp->protocol, cp->state),
 				   ip_vs_origin_name(cp->flags),
-				   (cp->timer.expires - jiffies) / HZ);
+				   (cp->timer.expire - jiffies) / HZ);
 		else
 #endif
 			seq_printf(seq,
@@ -1379,7 +1463,7 @@ static int ip_vs_conn_sync_seq_show(struct seq_file *seq, void *v)
 				   ntohl(cp->daddr.ip), ntohs(cp->dport),
 				   ip_vs_state_name(cp->protocol, cp->state),
 				   ip_vs_origin_name(cp->flags),
-				   (cp->timer.expires - jiffies) / HZ);
+				   (cp->timer.expire - jiffies) / HZ);
 	}
 	return 0;
 }
@@ -1443,7 +1527,7 @@ static void ip_vs_conn_flush(void)
 		 * or unhashed but still referred */
 		/*
 		if (per_cpu(ip_vs_conn_cnt_per, cpu) != 0) {
-			sleep(1);
+			usleep(100000);
 			goto flush_again;
 		}
 		*/

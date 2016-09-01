@@ -134,7 +134,8 @@ ip_vs_tcpudp_debug_packet_v4(struct ip_vs_protocol *pp,
 			     const struct rte_mbuf *skb,
 			     int offset, const char *msg)
 {
-	ofp_print_packet(msg, (odp_packet_t)skb);
+	if (ofp_debug_logging_enabled())
+		ofp_print_packet(msg, (odp_packet_t)skb);
 }
 
 #ifdef CONFIG_IP_VS_IPV6

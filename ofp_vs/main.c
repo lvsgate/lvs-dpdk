@@ -63,6 +63,102 @@ static void signal_handler(int signal)
   fprintf(stderr, "Recv signal %u (%s) exiting.\n", signal, signal_name);
 }
 
+static void *event_dispatcher(void *arg)
+{
+	odp_event_t ev;
+	odp_packet_t pkt;
+	odp_queue_t in_queue;
+	odp_event_t events[OFP_EVT_RX_BURST_SIZE];
+	int event_idx = 0;
+	int event_cnt = 0;
+	ofp_pkt_processing_func pkt_func = (ofp_pkt_processing_func)arg;
+	odp_bool_t *is_running = NULL;
+	int cpuid = odp_cpu_id();
+	odp_queue_t time_queue_cpu;
+
+	if (ofp_init_local()) {
+		OFP_ERR("ofp_init_local failed");
+		return NULL;
+	}
+
+	is_running = ofp_get_processing_state();
+	if (is_running == NULL) {
+		OFP_ERR("ofp_get_processing_state failed");
+		ofp_term_local();
+		return NULL;
+	}
+
+	/* PER CORE DISPATCHER */
+	while (*is_running) {
+		event_cnt = odp_schedule_multi(&in_queue, ODP_SCHED_WAIT,
+					 events, OFP_EVT_RX_BURST_SIZE);
+		for (event_idx = 0; event_idx < event_cnt; event_idx++) {
+			ev = events[event_idx];
+
+			if (ev == ODP_EVENT_INVALID)
+				continue;
+
+			if (odp_event_type(ev) == ODP_EVENT_TIMEOUT) {
+				ofp_timer_handle(ev);
+				continue;
+			}
+
+			if (odp_event_type(ev) == ODP_EVENT_PACKET) {
+				pkt = odp_packet_from_event(ev);
+#if 0
+				if (odp_unlikely(odp_packet_has_error(pkt))) {
+					OFP_DBG("Dropping packet with error");
+					odp_packet_free(pkt);
+					continue;
+				}
+#endif
+				ofp_packet_input(pkt, in_queue, pkt_func);
+				continue;
+			}
+
+			OFP_ERR("Unexpected event type: %u", odp_event_type(ev));
+
+			/* Free events by type */
+			if (odp_event_type(ev) == ODP_EVENT_BUFFER) {
+				odp_buffer_free(odp_buffer_from_event(ev));
+				continue;
+			}
+
+			if (odp_event_type(ev) == ODP_EVENT_CRYPTO_COMPL) {
+				odp_crypto_compl_free(
+					odp_crypto_compl_from_event(ev));
+				continue;
+			}
+
+		}
+		ofp_send_pending_pkt();
+
+		/* per cpu ofp timer schedule */
+		time_queue_cpu = ofp_timer_queue_cpu(cpuid);
+		event_cnt = odp_queue_deq_multi(time_queue_cpu,
+					events,
+					OFP_EVT_RX_BURST_SIZE);
+		for (event_idx = 0; event_idx < event_cnt; event_idx++) {
+			ev = events[event_idx];
+			if (odp_event_type(ev) == ODP_EVENT_TIMEOUT) {
+				ofp_timer_handle(ev);
+				continue;
+			} else {
+				OFP_ERR("Unexpected event type: %u",
+					odp_event_type(ev));
+			}
+		}
+
+		/* dpdk timer schedule */
+		rte_timer_manage();
+	}
+
+	if (ofp_term_local())
+		OFP_ERR("ofp_term_local failed");
+
+	return NULL;
+}
+
 
 /** main() Application entry point
  *
@@ -156,7 +252,8 @@ int main(int argc, char *argv[])
 	memset(thread_tbl, 0, sizeof(thread_tbl));
 	/* Start dataplane dispatcher worker threads */
 
-	thr_params.start = default_event_dispatcher;
+	//thr_params.start = default_event_dispatcher;
+	thr_params.start = event_dispatcher;
 	thr_params.arg = ofp_eth_vlan_processing;
 	thr_params.thr_type = ODP_THREAD_WORKER;
 	thr_params.instance = instance;
@@ -168,12 +265,12 @@ int main(int argc, char *argv[])
 	/* Start CLI */
 	ofp_start_cli_thread(instance, app_init_params.linux_core_id, params.conf_file);
 
+	rte_timer_subsystem_init();
+
 	if (ofp_vs_init(instance, &app_init_params) < 0) {
 		ofp_stop_processing();
 		OFP_ERR("ofp_vs_init() failed\n");
 	}
-
-
 
 	odph_linux_pthread_join(thread_tbl, num_workers);
 	printf("End Worker\n");

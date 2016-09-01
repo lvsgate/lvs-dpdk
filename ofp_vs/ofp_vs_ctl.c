@@ -1827,7 +1827,7 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 	(void)ops;
 	cmd_id = info->genlhdr->cmd;
 	
-	OFP_INFO("Get command: %s\n", cmd->c_name);
+	OFP_DBG("Get command: %s\n", cmd->c_name);
 
 	if (cmd_id == IPVS_CMD_GET_SERVICE) {
 		if (info->nlh->nlmsg_flags & NLM_F_DUMP) {
@@ -1973,7 +1973,7 @@ static int ip_vs_genl_dump_laddrs(struct nl_cache_ops *ops,
 
 	(void)arg;
 	(void)ops;
-	OFP_INFO("Dump command: %s\n", cmd->c_name);
+	OFP_DBG("Dump command: %s\n", cmd->c_name);
 
 	mutex_lock(&__ip_vs_mutex);
 
@@ -2125,7 +2125,7 @@ static int ip_vs_genl_dump_dests(struct nl_cache_ops *ops,
 
 	(void)arg;
 	(void)ops;
-	OFP_INFO("Dump command: %s\n", cmd->c_name);
+	OFP_DBG("Dump command: %s\n", cmd->c_name);
 
 	mutex_lock(&__ip_vs_mutex);
 
@@ -2179,7 +2179,7 @@ static int ip_vs_genl_dump_daemons(struct nl_cache_ops *ops,
 	(void)arg;
 	(void)ops;
 	(void)info;
-	OFP_INFO("Dump command: %s\n", cmd->c_name);
+	OFP_DBG("Dump command: %s\n", cmd->c_name);
 	return 0;
 }
 
@@ -2222,7 +2222,7 @@ static int ip_vs_genl_dump_services(struct genl_cmd *cmd,
 
 	(void)arg;
 	
-	OFP_INFO("Dump command: %s\n", cmd->c_name);
+	OFP_DBG("Dump command: %s\n", cmd->c_name);
 
 	mutex_lock(&__ip_vs_mutex);
 	for (i = 0; i < IP_VS_SVC_TAB_SIZE; i++) {
@@ -2458,7 +2458,7 @@ static int ip_vs_genl_set_cmd(struct nl_cache_ops *ops,
 
 	(void)arg;
 	(void)ops;
-	OFP_INFO("Set command: %d %s\n", cmd, genl_cmd->c_name);
+	OFP_DBG("Set command: %d %s\n", cmd, genl_cmd->c_name);
 
 	mutex_lock(&__ip_vs_mutex);
 

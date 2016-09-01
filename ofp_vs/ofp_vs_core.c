@@ -13,6 +13,8 @@
 
 #include "ofp_vs.h"
 
+uint64_t rte_hz;
+
 const char *ip_vs_proto_name(unsigned proto)
 {
 	static char buf[20];
@@ -390,6 +392,8 @@ enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg)
 int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params)
 {
 	int ret;
+	
+	rte_hz = rte_get_timer_hz();
 
 	if ((ret = ofp_vs_ctl_init(instance, app_init_params)) < 0)
 		return ret;
