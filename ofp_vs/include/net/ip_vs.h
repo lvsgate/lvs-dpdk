@@ -24,6 +24,7 @@
 #include "ofp_vs_tcpip.h"
 #include "kern_list.h"
 #include "linux/ip_vs.h"
+#include "ofp_vs_timer.h"
 
 struct ip_vs_iphdr {
 	int len;
@@ -312,7 +313,7 @@ struct ip_vs_protocol {
 	int (*app_conn_bind) (struct ip_vs_conn * cp);
 
 	void (*debug_packet) (struct ip_vs_protocol *pp,
-			      const struct rte_mbuf *skb,
+			      struct rte_mbuf *skb,
 			      int offset, const char *msg);
 
 	void (*timeout_change) (struct ip_vs_protocol * pp, int flags);
@@ -377,14 +378,9 @@ struct ip_vs_conn {
 
 	/* counter and timer */
 	atomic_t refcnt;	/* reference count */
-#ifdef CONFIG_OFP_VS_RTE_TIMER
-	struct rte_timer timer;
-#else
-	odp_timer_t timer;	/* Expiration timer */
-	uint64_t expires;
-#endif
+	struct ofp_vs_timer timer;
 	volatile unsigned long timeout;	/* timeout */
-	uint64_t next_expires;
+	uint64_t expires;
 
 	/* Flags and state transition */
 	spinlock_t lock;	/* lock for state transition */
@@ -951,7 +947,7 @@ ip_vs_set_state_timeout(int *table, int num, const char *const *names,
 			const char *name, int to);
 extern void
 ip_vs_tcpudp_debug_packet(struct ip_vs_protocol *pp,
-			  const struct rte_mbuf *skb,
+			  struct rte_mbuf *skb,
 			  int offset, const char *msg);
 
 extern struct ip_vs_protocol ip_vs_protocol_tcp;
@@ -1001,7 +997,7 @@ extern int sysctl_ip_vs_fast_xmit;
 extern int sysctl_ip_vs_fast_xmit_inside;
 extern int sysctl_ip_vs_csum_offload;
 extern int sysctl_ip_vs_reserve_core;
-extern int sysctl_ip_vs_conn_max_num;
+extern uint32_t sysctl_ip_vs_conn_max_num;
 
 DECLARE_PER_CPU(spinlock_t, ip_vs_svc_lock);
 

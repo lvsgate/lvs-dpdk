@@ -25,19 +25,21 @@ ipv4_cksum(struct iphdr *iphdr, struct rte_mbuf *skb)
 	uint16_t ethertype;
 
 	iphdr->check = 0;
-	skb->ol_flags |= PKT_TX_OUTER_IP_CKSUM;
 	if (sysctl_ip_vs_csum_offload) {
 		/* Use hardware csum offload */
+		//skb->ol_flags |= PKT_TX_OUTER_IP_CKSUM;
+		//skb->ol_flags |= PKT_TX_OUTER_IPV4;
 		skb->ol_flags |= PKT_TX_IPV4;
 		skb->ol_flags |= PKT_TX_IP_CKSUM;
 		skb->l3_len = ip_hdrlen(iphdr);
 		skb->l2_len = sizeof(struct ether_hdr);
 		ethertype = rte_be_to_cpu_16(eth_hdr->ether_type);
+		//skb->outer_l3_len = ip_hdrlen(iphdr);
+		//skb->outer_l2_len = sizeof(struct ether_hdr);
 
 		if (ethertype == ETHER_TYPE_VLAN) {
 			skb->l2_len  += sizeof(struct vlan_hdr);
 		}
-
 	} else {
 		iphdr->check = ofp_vs_ipv4_cksum(iphdr);
 	}
@@ -48,6 +50,9 @@ static int
 ip_vs_fast_xmit(struct rte_mbuf *skb, struct ip_vs_protocol *pp,
 		struct ip_vs_conn *cp)
 {
+	(void)skb;
+	(void)pp;
+	(void)cp;
 	return -1;
 }
 
@@ -56,6 +61,9 @@ ip_vs_fast_response_xmit(struct rte_mbuf *skb,
 			 struct ip_vs_protocol *pp,
 			 struct ip_vs_conn *cp)
 {
+	(void)skb;
+	(void)pp;
+	(void)cp;
 	return -1;
 }
 
@@ -110,6 +118,7 @@ ip_vs_fnat_response_xmit(struct rte_mbuf *skb, struct ip_vs_protocol *pp,
 			 struct ip_vs_conn *cp, int ihl)
 {
 	struct iphdr *iphdr = ip_hdr(skb);
+	(void)ihl;
 
 	EnterFunction(10);
 

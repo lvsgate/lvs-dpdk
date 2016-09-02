@@ -59,6 +59,7 @@ ip_vs_set_state(struct ip_vs_conn *cp, int direction,
 static int
 ip_vs_in_icmp(struct rte_mbuf *skb, int *related)
 {
+	(void)skb;
 	*related = 0;
 	return NF_ACCEPT;
 }
@@ -73,6 +74,7 @@ handle_response(int af, struct rte_mbuf *skb, struct ip_vs_protocol *pp,
 		struct ip_vs_conn *cp, int ihl)
 {
 	int ret = NF_DROP;
+	(void)af;
 
 	/* statistics */
 	ip_vs_out_stats(cp, skb);
@@ -102,7 +104,7 @@ handle_response(int af, struct rte_mbuf *skb, struct ip_vs_protocol *pp,
 		}
 	}
 
-out:
+//out:
 	ip_vs_conn_put(cp);
 	return ret;
 }
@@ -127,7 +129,7 @@ struct ip_vs_conn *ip_vs_schedule(struct ip_vs_service *svc,
 	struct ip_vs_conn *cp = NULL;
 	struct ip_vs_iphdr iph;
 	struct ip_vs_dest *dest;
-	__be16 _ports[2], *pptr;
+	__be16 *pptr;
 
 	ip_vs_fill_iphdr(svc->af, ip_hdr(skb), &iph);
 	pptr = rte_pktmbuf_mtod_offset(skb, __be16 *,
@@ -192,9 +194,10 @@ struct ip_vs_conn *ip_vs_schedule(struct ip_vs_service *svc,
 int ip_vs_leave(struct ip_vs_service *svc, struct rte_mbuf *skb,
 		struct ip_vs_protocol *pp)
 {
-	__be16 _ports[2], *pptr;
+	__be16 *pptr;
 	struct ip_vs_iphdr iph;
-	int unicast;
+	(void)pp;
+
 	ip_vs_fill_iphdr(svc->af, ip_hdr(skb), &iph);
 
 	pptr = rte_pktmbuf_mtod_offset(skb, __be16 *,
@@ -239,27 +242,23 @@ int ip_vs_leave(struct ip_vs_service *svc, struct rte_mbuf *skb,
 
 enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg)
 {
-	int protocol = *(int *)arg;
-	struct ether_hdr *eth_hdr;
 	struct rte_mbuf *skb = (struct rte_mbuf *)pkt;
 	struct iphdr *iphdr;
 	struct ip_vs_iphdr iph;
 	struct ip_vs_protocol *pp;
 	struct ip_vs_conn *cp;
-	int ret, restart, af, pkts;
-	int v = NF_DROP;
+	int ret, af;
 	int res_dir;
 	int tot_len;
+	(void)arg;
 
-	eth_hdr = rte_pktmbuf_mtod(skb, struct ether_hdr*);
-	
 	/* Only support IPV4 */
     	if(!RTE_ETH_IS_IPV4_HDR(skb->packet_type))
 		return NF_ACCEPT;
 
 	af = AF_INET;
 	iphdr = rte_pktmbuf_mtod_offset(skb, struct iphdr *,
-					   sizeof(struct ether_hdr));
+					sizeof(struct ether_hdr));
 
 	tot_len = rte_be_to_cpu_16(iphdr->tot_len);
 	if (tot_len > skb->data_len || tot_len < ip_hdrlen(iphdr)) {
@@ -287,7 +286,7 @@ enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg)
 	 */
 	cp = pp->conn_in_get(af, skb, pp, &iph, iph.len, 0, &res_dir);
 
-	if (likely(cp)) {
+	if (likely(cp != NULL)) {
 		/* For full-nat/local-client packets, it could be a response */
 		if (res_dir == IP_VS_CIDX_F_IN2OUT) {
 			return handle_response(af, skb, pp, cp, iph.len);
@@ -354,7 +353,7 @@ enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg)
 	}
 	*/
 
-	restart = ip_vs_set_state(cp, IP_VS_DIR_INPUT, skb, pp);
+	ip_vs_set_state(cp, IP_VS_DIR_INPUT, skb, pp);
 	if (cp->packet_xmit)
 		ret = cp->packet_xmit(skb, cp, pp);
 	/* do not touch skb anymore */
@@ -363,26 +362,6 @@ enum ofp_return_code ofp_vs_in(odp_packet_t pkt, void *arg)
 		ret = NF_ACCEPT;
 	}
 
-	/* Increase its packet counter and check if it is needed
-	 * to be synchronized
-	 *
-	 * Sync connection if it is about to close to
-	 * encorage the standby servers to update the connections timeout
-	 */
-	pkts = atomic_add_return(1, &cp->in_pkts);
-	/*
-	if (af == AF_INET &&
-	    (ip_vs_sync_state & IP_VS_STATE_MASTER) &&
-	    (((cp->protocol != IPPROTO_TCP ||
-	       cp->state == IP_VS_TCP_S_ESTABLISHED) &&
-	      (pkts % sysctl_ip_vs_sync_threshold[1]
-	       == sysctl_ip_vs_sync_threshold[0])) ||
-	     ((cp->protocol == IPPROTO_TCP) && (cp->old_state != cp->state) &&
-	      ((cp->state == IP_VS_TCP_S_FIN_WAIT) ||
-	       (cp->state == IP_VS_TCP_S_CLOSE_WAIT) ||
-	       (cp->state == IP_VS_TCP_S_TIME_WAIT)))))
-		ip_vs_sync_conn(cp);
-	*/
 	cp->old_state = cp->state;
 
 	ip_vs_conn_put(cp);
@@ -395,12 +374,14 @@ int ofp_vs_init(odp_instance_t instance, ofp_init_global_t *app_init_params)
 	
 	rte_hz = rte_get_timer_hz();
 
+	if ((ret = ofp_vs_timer_init()) < 0)
+		return ret;
+
 	if ((ret = ofp_vs_ctl_init(instance, app_init_params)) < 0)
 		return ret;
 
 	if ((ret = ip_vs_protocol_init() < 0))
 		return ret;
-
 
 	if ((ret = ip_vs_conn_init()) < 0)
 		return ret;
@@ -419,4 +400,5 @@ void ofp_vs_finish(void)
 	ip_vs_protocol_cleanup();
 	ip_vs_conn_cleanup();
 	ofp_vs_ctl_finish();
+	ofp_vs_timer_finish();
 }

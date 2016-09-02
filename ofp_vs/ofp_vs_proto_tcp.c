@@ -30,6 +30,7 @@ static struct ip_vs_conn *tcp_conn_in_get(int af, const struct rte_mbuf *skb,
 					  int *res_dir)
 {
 	__be16 *pptr;
+	(void)pp;
 
 	pptr = rte_pktmbuf_mtod_offset(skb, __be16 *,
 			sizeof(struct ether_hdr) + proto_off);
@@ -54,6 +55,7 @@ static struct ip_vs_conn *tcp_conn_out_get(int af, const struct rte_mbuf *skb,
 					   int *res_dir)
 {
 	__be16 *pptr;
+	(void)pp;
 
 	pptr = rte_pktmbuf_mtod_offset(skb, __be16 *,
 			sizeof(struct ether_hdr) + proto_off);
@@ -145,6 +147,9 @@ tcp_conn_schedule(int af, struct rte_mbuf *skb, struct ip_vs_protocol *pp,
 static inline void
 tcp_mss_csum_update(struct tcphdr *tcph, __be16 oldmss, __be16 newmss)
 {
+	(void)tcph;
+	(void)oldmss;
+	(void)newmss;
 }
 
 /* adjust tcp opt mss, sub TCPOLEN_CIP */
@@ -152,6 +157,7 @@ static void tcp_opt_adjust_mss(int af, struct tcphdr *tcph)
 {
 	unsigned char *ptr;
 	int length;
+	(void)af;
 
 	if (sysctl_ip_vs_mss_adjust_entry == 0)
 		return;
@@ -227,6 +233,9 @@ tcp_save_out_seq(struct rte_mbuf *skb, struct ip_vs_conn *cp,
 static inline void
 tcp_seq_csum_update(struct tcphdr *tcph, __u32 oldseq, __u32 newseq)
 {
+	(void)tcph;
+	(void)oldseq;
+	(void)newseq;
 }
 
 /*
@@ -335,6 +344,7 @@ tcp_fnat_out_handler(struct rte_mbuf *skb,
 	struct iphdr *iph = ip_hdr(skb);
 	struct tcphdr *tcph;
 	unsigned int tcphoff;
+	(void)pp;
 
 #ifdef CONFIG_IP_VS_IPV6
 	if (cp->af == AF_INET6)
@@ -393,6 +403,7 @@ tcp_fnat_out_handler(struct rte_mbuf *skb,
  */
 static void tcp_opt_remove_timestamp(struct tcphdr *tcph)
 {
+	(void)tcph;
 	if (sysctl_ip_vs_timestamp_remove_entry == 0)
 		return;
 }
@@ -422,11 +433,14 @@ static __u32 secure_tcp_sequence_number(__be32 saddr, __be32 daddr,
  * recompute tcp sequence, OUTside to INside;
  */
 static void
-tcp_in_init_seq(struct ip_vs_conn *cp, struct rte_mbuf *skb, struct tcphdr *tcph)
+tcp_in_init_seq(struct ip_vs_conn *cp, struct rte_mbuf *skb,
+		struct tcphdr *tcph)
 {
 	struct ip_vs_seq *fseq = &(cp->fnat_seq);
 	__u32 seq = ntohl(tcph->seq);
 	int conn_reused_entry;
+	(void)tcph;
+	(void)skb;
 
 	if ((fseq->delta == fseq->init_seq - seq) && (fseq->init_seq != 0)) {
 		/* retransmit */
@@ -502,9 +516,12 @@ static void tcp_in_adjust_seq(struct ip_vs_conn *cp, struct tcphdr *tcph)
  * return 0 if success
  */
 static int tcp_opt_add_toa(struct ip_vs_conn *cp,
-				       struct rte_mbuf *skb,
-				       struct tcphdr **tcph)
+		       struct rte_mbuf *skb,
+		       struct tcphdr **tcph)
 {
+	(void)cp;
+	(void)skb;
+	(void)tcph;
 	return 0;
 }
 
@@ -514,14 +531,7 @@ tcp_fnat_in_handler(struct rte_mbuf *skb,
 {
 	struct iphdr *iph = ip_hdr(skb);
 	struct tcphdr *tcph = tcp_hdr(iph);
-	unsigned int tcphoff;
-
-#ifdef CONFIG_IP_VS_IPV6
-	if (cp->af == AF_INET6)
-		tcphoff = sizeof(struct ipv6hdr);
-	else
-#endif
-		tcphoff = ip_hdrlen(iph);
+	(void)pp;
 
 
 	/*
@@ -580,6 +590,7 @@ tcp_fnat_in_handler(struct rte_mbuf *skb,
 static void
 tcp_conn_expire_handler(struct ip_vs_protocol *pp, struct ip_vs_conn *cp)
 {
+	(void)pp;
 	/* support fullnat and nat */
 	if (sysctl_ip_vs_conn_expire_tcp_rst &&
 	    (cp->flags & (IP_VS_CONN_F_FULLNAT | IP_VS_CONN_F_MASQ))) {
@@ -604,18 +615,18 @@ static const int tcp_state_off[IP_VS_DIR_LAST] = {
  *	Timeout table[state]
  */
 int sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_LAST + 1] = {
-	[IP_VS_TCP_S_NONE] = 2,
-	[IP_VS_TCP_S_ESTABLISHED] = 90,
-	[IP_VS_TCP_S_SYN_SENT] = 3,
-	[IP_VS_TCP_S_SYN_RECV] = 30,
-	[IP_VS_TCP_S_FIN_WAIT] = 7,
-	[IP_VS_TCP_S_TIME_WAIT] = 7,
-	[IP_VS_TCP_S_CLOSE] = 3,
-	[IP_VS_TCP_S_CLOSE_WAIT] = 7,
-	[IP_VS_TCP_S_LAST_ACK] = 7,
-	[IP_VS_TCP_S_LISTEN] = 2 * 60,
-	[IP_VS_TCP_S_SYNACK] = 30,
-	[IP_VS_TCP_S_LAST] = 2,
+	[IP_VS_TCP_S_NONE] = 2 * HZ,
+	[IP_VS_TCP_S_ESTABLISHED] = 90 * HZ,
+	[IP_VS_TCP_S_SYN_SENT] = 3 * HZ,
+	[IP_VS_TCP_S_SYN_RECV] = 30 * HZ,
+	[IP_VS_TCP_S_FIN_WAIT] = 7 * HZ,
+	[IP_VS_TCP_S_TIME_WAIT] = 7 * HZ,
+	[IP_VS_TCP_S_CLOSE] = 3 * HZ,
+	[IP_VS_TCP_S_CLOSE_WAIT] = 7 * HZ,
+	[IP_VS_TCP_S_LAST_ACK] = 7 * HZ,
+	[IP_VS_TCP_S_LISTEN] = 2 * 60 * HZ,
+	[IP_VS_TCP_S_SYNACK] = 30 * HZ,
+	[IP_VS_TCP_S_LAST] = 2 * HZ,
 };
 
 static const char *const tcp_state_name_table[IP_VS_TCP_S_LAST + 1] = {
@@ -707,6 +718,7 @@ static struct tcp_states_t *tcp_state_table = tcp_states;
 static void tcp_timeout_change(struct ip_vs_protocol *pp, int flags)
 {
 	int on = (flags & 1);	/* secure_tcp */
+	(void)pp;
 
 	/*
 	 ** FIXME: change secure_tcp to independent sysctl var
@@ -743,6 +755,7 @@ set_tcp_state(struct ip_vs_protocol *pp, struct ip_vs_conn *cp,
 	int state_idx;
 	int new_state = IP_VS_TCP_S_CLOSE;
 	int state_off = tcp_state_off[direction];
+	(void)pp;
 
 	/*
 	 *    Update state offset to INPUT_ONLY if necessary
@@ -801,7 +814,7 @@ set_tcp_state(struct ip_vs_protocol *pp, struct ip_vs_conn *cp,
 
 	cp->old_state = cp->state;	// old_state called when connection reused
 	cp->timeout = ((cp->state = new_state) == IP_VS_TCP_S_ESTABLISHED) ?
-							cp->est_timeout : sysctl_ip_vs_tcp_timeouts[new_state];
+			cp->est_timeout : sysctl_ip_vs_tcp_timeouts[new_state];
 }
 
 /*
@@ -813,12 +826,6 @@ tcp_state_transition(struct ip_vs_conn *cp, int direction,
 {
 	struct iphdr *iph = ip_hdr(skb);
 	struct tcphdr *th = tcp_hdr(iph);
-
-#ifdef CONFIG_IP_VS_IPV6
-	int ihl = cp->af == AF_INET ? ip_hdrlen(skb) : sizeof(struct ipv6hdr);
-#else
-	int ihl = ip_hdrlen(iph);
-#endif
 
 	if (th == NULL)
 		return 0;
@@ -838,6 +845,7 @@ static void ip_vs_tcp_init(struct ip_vs_protocol *pp)
 
 static void ip_vs_tcp_exit(struct ip_vs_protocol *pp)
 {
+	(void)pp;
 }
 
 struct ip_vs_protocol ip_vs_protocol_tcp = {

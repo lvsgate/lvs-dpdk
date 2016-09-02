@@ -114,7 +114,7 @@ ip_vs_set_state_timeout(int *table, int num, const char *const *names,
 	for (i = 0; i < num; i++) {
 		if (strcmp(names[i], name))
 			continue;
-		table[i] = to;
+		table[i] = to * HZ;
 		return 0;
 	}
 	return -ENOENT;
@@ -131,9 +131,11 @@ const char *ip_vs_state_name(__u16 proto, int state)
 
 static void
 ip_vs_tcpudp_debug_packet_v4(struct ip_vs_protocol *pp,
-			     const struct rte_mbuf *skb,
+			     struct rte_mbuf *skb,
 			     int offset, const char *msg)
 {
+	(void)offset;
+	(void)pp;
 	if (ofp_debug_logging_enabled())
 		ofp_print_packet(msg, (odp_packet_t)skb);
 }
@@ -174,7 +176,7 @@ ip_vs_tcpudp_debug_packet_v6(struct ip_vs_protocol *pp,
 
 void
 ip_vs_tcpudp_debug_packet(struct ip_vs_protocol *pp,
-			  const struct rte_mbuf *skb,
+			  struct rte_mbuf *skb,
 			  int offset, const char *msg)
 {
 #ifdef CONFIG_IP_VS_IPV6

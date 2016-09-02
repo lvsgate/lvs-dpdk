@@ -1044,9 +1044,13 @@ static inline int laddr_to_cpuid(int af, const union nf_inet_addr *addr)
 	unsigned lcore_id;
 	unsigned seed;
 	unsigned pos;
-	int idx = 0;
+	unsigned idx = 0;
 
-	seed = rte_be_to_cpu_32(addr->ip) & LADDR_MASK;
+	if(af == AF_INET6)
+		seed = rte_be_to_cpu_32(addr->in6.s6_addr32[3]) & LADDR_MASK;
+	else
+		seed = rte_be_to_cpu_32(addr->ip) & LADDR_MASK;
+
 	pos = seed % rte_lcore_count(); 
 
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
@@ -1278,9 +1282,9 @@ ip_vs_add_service(struct ip_vs_service_user_kern *u,
 		this_svc->port = u->port;
 		this_svc->fwmark = u->fwmark;
 		this_svc->flags = u->flags;
-		this_svc->timeout = u->timeout;
+		this_svc->timeout = u->timeout * HZ;
 		this_svc->netmask = u->netmask;
-		this_svc->est_timeout = u->est_timeout;
+		this_svc->est_timeout = u->est_timeout * HZ;
 
 		/* Init the local address stuff */
 		rwlock_init(&this_svc->laddr_lock);
@@ -1378,9 +1382,9 @@ ip_vs_edit_service(struct ip_vs_service *svc, struct ip_vs_service_user_kern *u)
 		 * Set the flags and timeout value
 		 */
 		this_svc->flags = u->flags | IP_VS_SVC_F_HASHED;
-		this_svc->timeout = u->timeout;
+		this_svc->timeout = u->timeout*HZ;
 		this_svc->netmask = u->netmask;
-		this_svc->est_timeout = u->est_timeout;
+		this_svc->est_timeout = u->est_timeout*HZ;
 
 		spin_unlock_bh(&per_cpu(ip_vs_svc_lock, cpu));
 	}
@@ -1703,7 +1707,7 @@ static int ip_vs_genl_parse_service(struct ip_vs_service_user_kern *usvc,
 			if(nla_est_timeout) /* Be compatible with different version of libipvs2.6 */
 				usvc->est_timeout = nla_get_u32(nla_est_timeout);
 			if(!usvc->est_timeout)
-				usvc->est_timeout = sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_ESTABLISHED] ;
+				usvc->est_timeout = sysctl_ip_vs_tcp_timeouts[IP_VS_TCP_S_ESTABLISHED]/HZ ;
 		}
 	}
 
@@ -1783,7 +1787,7 @@ static int ip_vs_genl_fill_service(struct nl_msg *msg,
 	NLA_PUT(msg, IPVS_SVC_ATTR_FLAGS, sizeof(flags), &flags);
 	NLA_PUT_U32(msg, IPVS_SVC_ATTR_TIMEOUT, svc->timeout);
 	NLA_PUT_U32(msg, IPVS_SVC_ATTR_NETMASK, svc->netmask);
-	NLA_PUT_U32(msg, IPVS_SVC_ATTR_EST_TIMEOUT, svc->est_timeout);
+	NLA_PUT_U32(msg, IPVS_SVC_ATTR_EST_TIMEOUT, svc->est_timeout/HZ);
 
 	memset((void*)(&tmp_stats), 0, sizeof(struct ip_vs_stats));
 	this_svc = svc->svc0;
@@ -1812,6 +1816,23 @@ nla_put_failure:
 static int ip_vs_genl_dump_services(struct genl_cmd *cmd,
 	                                  struct genl_info *info,
 	                                  void *arg);
+
+static inline void __ip_vs_get_timeouts(struct ip_vs_timeout_user *u)
+{
+	(void)u;
+#ifdef CONFIG_IP_VS_PROTO_TCP
+	u->tcp_timeout =
+	    ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_ESTABLISHED]/HZ;
+	u->tcp_fin_timeout =
+	    ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_FIN_WAIT]/HZ;
+#endif
+#ifdef CONFIG_IP_VS_PROTO_UDP
+	u->udp_timeout =
+	    ip_vs_protocol_udp.timeout_table[IP_VS_UDP_S_NORMAL]/HZ;
+#endif
+}
+
+
 
 static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 	                            struct genl_cmd *cmd,
@@ -1885,6 +1906,24 @@ static int ip_vs_genl_get_cmd(struct nl_cache_ops *ops,
 
 			break;
 		}
+	case IPVS_CMD_GET_CONFIG:
+		{
+			struct ip_vs_timeout_user t;
+
+			__ip_vs_get_timeouts(&t);
+#ifdef CONFIG_IP_VS_PROTO_TCP
+			NLA_PUT_U32(msg, IPVS_CMD_ATTR_TIMEOUT_TCP,
+				    t.tcp_timeout);
+			NLA_PUT_U32(msg, IPVS_CMD_ATTR_TIMEOUT_TCP_FIN,
+				    t.tcp_fin_timeout);
+#endif
+#ifdef CONFIG_IP_VS_PROTO_UDP
+			NLA_PUT_U32(msg, IPVS_CMD_ATTR_TIMEOUT_UDP,
+				    t.udp_timeout);
+#endif
+
+			break;
+		} 
 	}
 
 	ret = ipvs_nl_reply(info, msg);
@@ -1991,8 +2030,8 @@ static int ip_vs_genl_dump_laddrs(struct nl_cache_ops *ops,
 	IP_VS_DBG_BUF(0, "vip %s:%d get local address \n",
 		      IP_VS_DBG_ADDR(svc->af, &svc->addr), ntohs(svc->port));
 
-	svc_per = svc->svc0;
 	for_each_online_cpu(cpu){
+		svc_per = svc->svc0 + cpu;
 		/* Dump the destinations */
 		list_for_each_entry(laddr, &svc_per->laddr_list, n_list) {
 			if (++idx <= start)
@@ -2003,7 +2042,7 @@ static int ip_vs_genl_dump_laddrs(struct nl_cache_ops *ops,
 				goto nla_put_failure;
 			}
 		}
-		svc_per++;
+		//svc_per++;
 	}
 
 nla_put_failure:
@@ -2378,21 +2417,6 @@ static int ip_vs_genl_parse_laddr(struct ip_vs_laddr_user_kern *uladdr,
 	return 0;
 }
 
-static inline void __ip_vs_get_timeouts(struct ip_vs_timeout_user *u)
-{
-	(void)u;
-#ifdef CONFIG_IP_VS_PROTO_TCP
-	u->tcp_timeout =
-	    ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_ESTABLISHED];
-	u->tcp_fin_timeout =
-	    ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_FIN_WAIT];
-#endif
-#ifdef CONFIG_IP_VS_PROTO_UDP
-	u->udp_timeout =
-	    ip_vs_protocol_udp.timeout_table[IP_VS_UDP_S_NORMAL];
-#endif
-}
-
 /*
  *	Set timeout values for tcp tcpfin udp in the timeout_table.
  */
@@ -2404,19 +2428,19 @@ static int ip_vs_set_timeout(struct ip_vs_timeout_user *u)
 #ifdef CONFIG_IP_VS_PROTO_TCP
 	if (u->tcp_timeout) {
 		ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_ESTABLISHED]
-		    = u->tcp_timeout;
+		    = u->tcp_timeout*HZ;
 	}
 
 	if (u->tcp_fin_timeout) {
 		ip_vs_protocol_tcp.timeout_table[IP_VS_TCP_S_FIN_WAIT]
-		    = u->tcp_fin_timeout;
+		    = u->tcp_fin_timeout*HZ;
 	}
 #endif
 
 #ifdef CONFIG_IP_VS_PROTO_UDP
 	if (u->udp_timeout) {
 		ip_vs_protocol_udp.timeout_table[IP_VS_UDP_S_NORMAL]
-		    = u->udp_timeout;
+		    = u->udp_timeout*HZ;
 	}
 #endif
 	return 0;

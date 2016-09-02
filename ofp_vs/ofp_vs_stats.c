@@ -4,6 +4,7 @@ RTE_DEFINE_PER_LCORE(struct ip_vs_stats, ip_vs_stats);
 
 void ip_vs_zero_stats(struct ip_vs_stats* stats)
 {
+	(void)stats;
 	/*
 	int i = 0;
 
