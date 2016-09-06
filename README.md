@@ -14,9 +14,9 @@ OpenFastPath source code is on https://github.com/lvsgate/ofp.git
 ##2. Get lvs-dpdk source code
 		git clone https://github.com/lvsgate/lvs-dpdk.git
 
-## 3. Copy or link ofp_vs to ofp/examples/ofp_vs
+## 3. Copy ofp_vs to ofp/examples/ofp_vs
 		cd $(topdir)/ofp/examples
-		ln -s $(topdir)/lvs-dpdk/ofp_vs ./
+		cp -r $(topdir)/lvs-dpdk/ofp_vs ./
 			
 
 ##4. Compile ofp_vs 
