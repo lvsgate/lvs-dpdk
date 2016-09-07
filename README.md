@@ -41,7 +41,7 @@ OpenFastPath source code is on https://github.com/lvsgate/ofp.git
 
 
 ## 9. Use ipvsadm and keepalived to configure virtual server on ofp_vs
-    The useage is unchanged.
+    The usage is unchanged.
     ipvsadm and keepalived will comunicate with ofp_vs process but not the kernel module.
 
 ## 10. More details
