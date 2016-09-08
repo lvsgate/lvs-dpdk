@@ -9,14 +9,14 @@ OpenFastPath source code is on https://github.com/lvsgate/ofp.git
 # Build steps
 ##1. Get and compile OpenFastPath
     The ofp depend on odp-dpdk (https://git.linaro.org/lng/odp-dpdk.git)
-		See the documents on https://github.com/lvsgate/ofp.git
+	See the documents on https://github.com/lvsgate/ofp.git
 
-##2. Get lvs-dpdk source code
-		git clone https://github.com/lvsgate/lvs-dpdk.git
-
-## 3. Compile ofp_vs 
+## 2. Compile ofp_vs 
 		cd $(topdir)/ofp/examples/ofp_vs
 		make
+
+## 3. Get lvs-dpdk source code
+		git clone https://github.com/lvsgate/lvs-dpdk.git
 
 ## 4. Compile keepalived
   	cd $(topdir)/lvs-dpdk/tools/keepalived
