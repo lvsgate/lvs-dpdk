@@ -8,7 +8,7 @@ OpenFastPath source code is on https://github.com/lvsgate/ofp.git
 
 # Build steps
 ##1. Get and compile OpenFastPath
-    The ofp depend on odp-dpdk (https://git.linaro.org/lng/odp-dpdk.git) 
+    The ofp depend on odp-dpdk (https://github.com/lvsgate/odp-dpdk) 
     See the documents on https://github.com/lvsgate/ofp.git
     I have compiled and tested it on centos 7.2
 
