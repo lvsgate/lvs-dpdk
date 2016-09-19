@@ -13,6 +13,7 @@ OpenFastPath source code is on https://github.com/lvsgate/ofp.git
     I have compiled and tested it on centos 7.2
 
 ## 2. Compile ofp_vs 
+		yum install libnl3 libnl3-cli
 		cd $(topdir)/ofp/examples/ofp_vs
 		make
 
