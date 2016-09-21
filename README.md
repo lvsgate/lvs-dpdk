@@ -73,15 +73,17 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     telnet localhost 2345
     type in "?" or "help"
     >>> ?
-    >>> ifconfig fp0 <ip_addr>/<net_mask> # fp0 equal to port number 0 in dpdk
-    >>> ifconfig fp1 <ip_addr>/<net_mask> # fp1 equal to port number 1 in dpdk
+    # fp0 equal to port number 0 in dpdk
+    >>> ifconfig fp0 <ip_addr>/<net_mask> 
+    >>> ifconfig fp1 <ip_addr>/<net_mask> 
     >>> route add 0.0.0.0/0 gw <next hop> dev fp0
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
-    >>> fdir flush fp1 #flush flow director in fp1 (port 1 in dpdk)
-    Add flow director entry for binding local address <a.b.c.d> to queue <d%data_core_count>
-    >>> fdir add fp0 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.100 dst_port 0 queue_id 0
-    >>> fdir add fp0 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.101 dst_port 0 queue_id 1
-    You can add these commands above to startup config file ofp.conf
+    #flush flow director in fp1 (port 1 in dpdk)
+    >>> fdir flush fp1 
+    #Add flow director entry for binding local address <a.b.c.d> to queue <d%data_core_count>
+    >>> fdir add fp1 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.100 dst_port 0 queue_id 0
+    >>> fdir add fp1 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.101 dst_port 0 queue_id 1
+    #You can add these commands above to startup config file ofp.conf
 
 
 ## 8. Use ipvsadm and keepalived to configure virtual server on ofp_vs
