@@ -105,4 +105,4 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     https://github.com/OpenFastPath/ofp
 
 ## 11. Support
-	email: lvsgate@163.com  lvsgateservice@gmail.com
+	email: lvsgateservice@gmail.com
