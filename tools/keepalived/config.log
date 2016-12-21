@@ -27,8 +27,12 @@ uname -v = #1 SMP Thu Nov 19 22:10:57 UTC 2015
 /usr/bin/oslevel       = unknown
 /bin/universe          = unknown
 
-PATH: /sbin
-PATH: /bin
+PATH: /usr/lib64/qt-3.3/bin
+PATH: /usr/local/sbin
+PATH: /usr/local/bin
+PATH: /usr/sbin
+PATH: /usr/bin
+PATH: /root/bin
 PATH: /usr/sbin
 PATH: /usr/bin
 
@@ -38,7 +42,7 @@ PATH: /usr/bin
 ## ----------- ##
 
 configure:2264: checking for gcc
-configure:2280: found /bin/gcc
+configure:2280: found /usr/bin/gcc
 configure:2291: result: gcc
 configure:2520: checking for C compiler version
 configure:2529: gcc --version >&5
@@ -100,9 +104,9 @@ configure:2972: gcc  -c -g -O2  conftest.c >&5
 configure:2972: $? = 0
 configure:2985: result: none needed
 configure:3048: checking for a BSD-compatible install
-configure:3116: result: /bin/install -c
+configure:3116: result: /usr/bin/install -c
 configure:3170: checking for strip
-configure:3186: found /bin/strip
+configure:3186: found /usr/bin/strip
 configure:3197: result: strip
 configure:3268: checking how to run the C preprocessor
 configure:3299: gcc -E  conftest.c
@@ -143,9 +147,9 @@ configure: failed program was:
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
 configure:3401: checking for grep that handles long lines and -e
-configure:3459: result: /bin/grep
+configure:3459: result: /usr/bin/grep
 configure:3464: checking for egrep
-configure:3526: result: /bin/grep -E
+configure:3526: result: /usr/bin/grep -E
 configure:3531: checking for ANSI C header files
 configure:3551: gcc -c -g -O2  conftest.c >&5
 configure:3551: $? = 0
@@ -292,31 +296,21 @@ configure:3965: $? = 0
 configure:3965: ./conftest
 configure:3965: $? = 0
 configure:3993: result: 3.10.0
-configure:4012: checking net/ip_vs.h usability
-configure:4012: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
-configure:4012: $? = 0
-configure:4012: result: yes
-configure:4012: checking net/ip_vs.h presence
-configure:4012: gcc -E  -I/usr/src/linux/include conftest.c
-configure:4012: $? = 0
-configure:4012: result: yes
-configure:4012: checking for net/ip_vs.h
-configure:4012: result: yes
-configure:4032: checking for IPVS syncd support
-configure:4047: result: yes
-configure:4077: checking for an ANSI C-conforming const
-configure:4143: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
-configure:4143: $? = 0
-configure:4150: result: yes
-configure:4158: checking for pid_t
-configure:4158: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
-configure:4158: $? = 0
-configure:4158: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
+configure:4026: checking for IPVS syncd support
+configure:4041: result: yes
+configure:4071: checking for an ANSI C-conforming const
+configure:4137: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
+configure:4137: $? = 0
+configure:4144: result: yes
+configure:4152: checking for pid_t
+configure:4152: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
+configure:4152: $? = 0
+configure:4152: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
 conftest.c: In function 'main':
 conftest.c:67:20: error: expected expression before ')' token
  if (sizeof ((pid_t)))
                     ^
-configure:4158: $? = 1
+configure:4152: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME ""
@@ -389,26 +383,26 @@ configure: failed program was:
 |   ;
 |   return 0;
 | }
-configure:4158: result: yes
-configure:4169: checking whether time.h and sys/time.h may both be included
-configure:4189: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
-configure:4189: $? = 0
-configure:4196: result: yes
-configure:4206: checking whether gcc needs -traditional
-configure:4240: result: no
-configure:4247: checking for working memcmp
-configure:4290: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4290: $? = 0
-configure:4290: ./conftest
-configure:4290: $? = 0
-configure:4300: result: yes
-configure:4309: checking return type of signal handlers
-configure:4327: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
+configure:4152: result: yes
+configure:4163: checking whether time.h and sys/time.h may both be included
+configure:4183: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
+configure:4183: $? = 0
+configure:4190: result: yes
+configure:4200: checking whether gcc needs -traditional
+configure:4234: result: no
+configure:4241: checking for working memcmp
+configure:4284: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4284: $? = 0
+configure:4284: ./conftest
+configure:4284: $? = 0
+configure:4294: result: yes
+configure:4303: checking return type of signal handlers
+configure:4321: gcc -c -g -O2  -I/usr/src/linux/include conftest.c >&5
 conftest.c: In function 'main':
 conftest.c:38:1: error: void value not ignored as it ought to be
  return *(signal (0, 0)) (0) == 1;
  ^
-configure:4327: $? = 1
+configure:4321: $? = 1
 configure: failed program was:
 | /* confdefs.h */
 | #define PACKAGE_NAME ""
@@ -451,32 +445,32 @@ configure: failed program was:
 |   ;
 |   return 0;
 | }
-configure:4334: result: void
-configure:4345: checking for gettimeofday
-configure:4345: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4345: $? = 0
-configure:4345: result: yes
-configure:4345: checking for select
-configure:4345: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4345: $? = 0
-configure:4345: result: yes
-configure:4345: checking for socket
-configure:4345: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4345: $? = 0
-configure:4345: result: yes
-configure:4345: checking for strerror
-configure:4345: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4345: $? = 0
-configure:4345: result: yes
-configure:4345: checking for strtol
-configure:4345: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4345: $? = 0
-configure:4345: result: yes
-configure:4345: checking for uname
-configure:4345: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
-configure:4345: $? = 0
-configure:4345: result: yes
-configure:4519: creating ./config.status
+configure:4328: result: void
+configure:4339: checking for gettimeofday
+configure:4339: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4339: $? = 0
+configure:4339: result: yes
+configure:4339: checking for select
+configure:4339: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4339: $? = 0
+configure:4339: result: yes
+configure:4339: checking for socket
+configure:4339: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4339: $? = 0
+configure:4339: result: yes
+configure:4339: checking for strerror
+configure:4339: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4339: $? = 0
+configure:4339: result: yes
+configure:4339: checking for strtol
+configure:4339: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4339: $? = 0
+configure:4339: result: yes
+configure:4339: checking for uname
+configure:4339: gcc -o conftest -g -O2  -I/usr/src/linux/include  conftest.c -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 >&5
+configure:4339: $? = 0
+configure:4339: result: yes
+configure:4513: creating ./config.status
 
 ## ---------------------- ##
 ## Running config.status. ##
@@ -541,7 +535,6 @@ ac_cv_have_decl_ETHERTYPE_IPV6=yes
 ac_cv_header_fcntl_h=yes
 ac_cv_header_inttypes_h=yes
 ac_cv_header_memory_h=yes
-ac_cv_header_net_ip_vs_h=yes
 ac_cv_header_openssl_err_h=yes
 ac_cv_header_openssl_md5_h=yes
 ac_cv_header_openssl_ssl_h=yes
@@ -563,9 +556,9 @@ ac_cv_lib_nl_nl_handle_alloc=yes
 ac_cv_lib_popt_poptGetContext=yes
 ac_cv_lib_ssl_SSL_CTX_new=yes
 ac_cv_objext=o
-ac_cv_path_EGREP='/bin/grep -E'
-ac_cv_path_GREP=/bin/grep
-ac_cv_path_install='/bin/install -c'
+ac_cv_path_EGREP='/usr/bin/grep -E'
+ac_cv_path_GREP=/usr/bin/grep
+ac_cv_path_install='/usr/bin/install -c'
 ac_cv_prog_CPP='gcc -E'
 ac_cv_prog_ac_ct_CC=gcc
 ac_cv_prog_ac_ct_STRIP=strip
@@ -588,9 +581,9 @@ DFLAGS=''
 ECHO_C=''
 ECHO_N='-n'
 ECHO_T=''
-EGREP='/bin/grep -E'
+EGREP='/usr/bin/grep -E'
 EXEEXT=''
-GREP='/bin/grep'
+GREP='/usr/bin/grep'
 INSTALL_DATA='${INSTALL} -m 644'
 INSTALL_PROGRAM='${INSTALL}'
 INSTALL_SCRIPT='${INSTALL}'
@@ -613,7 +606,7 @@ SHELL='/bin/sh'
 STRIP='strip'
 USE_NL='LIBIPVS_USE_NL'
 VERSION='1.2.2'
-VERSION_DATE='08/26,2016'
+VERSION_DATE='12/21,2016'
 VRRP_SUPPORT='_WITH_VRRP_'
 ac_ct_CC='gcc'
 bindir='${exec_prefix}/bin'

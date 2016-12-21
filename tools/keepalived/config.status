@@ -427,9 +427,9 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/lijian/git/LVS/tools/keepalived'
+ac_pwd='/home/lijian/git/lvs-dpdk/tools/keepalived'
 srcdir='.'
-INSTALL='/bin/install -c'
+INSTALL='/usr/bin/install -c'
 test -n "$AWK" || AWK=awk
 # The default lists apply if the user does not specify any file.
 ac_need_defaults=:
@@ -587,13 +587,13 @@ S["LIBOBJS"]=""
 S["VRRP_SUPPORT"]="_WITH_VRRP_"
 S["USE_NL"]="LIBIPVS_USE_NL"
 S["IPVS_SUPPORT"]="_WITH_LVS_"
-S["VERSION_DATE"]="08/26,2016"
+S["VERSION_DATE"]="12/21,2016"
 S["VERSION"]="1.2.2"
 S["DFLAGS"]=""
 S["IPVS_SYNCD"]="_HAVE_IPVS_SYNCD_"
 S["KERN"]="_KRNL_2_6_"
-S["EGREP"]="/bin/grep -E"
-S["GREP"]="/bin/grep"
+S["EGREP"]="/usr/bin/grep -E"
+S["GREP"]="/usr/bin/grep"
 S["CPP"]="gcc -E"
 S["STRIP"]="strip"
 S["INSTALL_DATA"]="${INSTALL} -m 644"

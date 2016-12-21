@@ -4007,21 +4007,15 @@ $as_echo "$as_me: WARNING: Cannot determine Linux Kernel version." >&2;}
 
 
 
-IPVS_SUPPORT="_WITHOUT_LVS_"
-if test "$enable_lvs" != "no"; then
-  ac_fn_c_check_header_mongrel "$LINENO" "net/ip_vs.h" "ac_cv_header_net_ip_vs_h" "$ac_includes_default"
-if test "x$ac_cv_header_net_ip_vs_h" = xyes; then :
-  IPVS_SUPPORT="_WITH_LVS_"
-else
-  
-      IPVS_SUPPORT="_WITHOUT_LVS_"
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: keepalived will be built without LVS support." >&5
-$as_echo "$as_me: WARNING: keepalived will be built without LVS support." >&2;}
-    
-fi
-
-
-fi  
+IPVS_SUPPORT="_WITH_LVS_"
+#if test "$enable_lvs" != "no"; then
+#    AC_CHECK_HEADER([net/ip_vs.h],
+#    [IPVS_SUPPORT="_WITH_LVS_"],
+#    [
+#      IPVS_SUPPORT="_WITHOUT_LVS_"
+#      AC_MSG_WARN([keepalived will be built without LVS support.])
+#    ])
+#fi  
 
 if test "$IPVS_SUPPORT" = "_WITHOUT_LVS_" -a "$enable_vrrp" = "no"; then
   as_fn_error $? "keepalived MUST be compiled at least with LVS or VRRP framework" "$LINENO" 5
