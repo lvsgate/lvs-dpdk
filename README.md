@@ -26,6 +26,10 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 	sed -ri 's,(CONFIG_RTE_LIBRTE_IXGBE_ALLOW_UNSUPPORTED_SFP=).*,\1y,' .config
 	cd ..
 	make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
+	
+	#A env value
+	export RTE_SDK=<dpdk-dir>
+        export RTE_TARGET=x86_64-native-linuxapp-gcc
 	    
 ##2. Fetch and compile odp-dpdk
 	git clone  https://git.linaro.org/lng/odp-dpdk.git <odp-dir>
