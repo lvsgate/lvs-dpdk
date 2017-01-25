@@ -17,7 +17,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 ##1. Fetch and compile DPDK
 	git clone git://dpdk.org/dpdk ./<dpdk-dir>
 	cd <dpdk-dir>
-	git checkout -b 16.07 tags/v16.07
+	#git checkout -b 16.07 tags/v16.07 #Maybe this step can be ignored
 	make config T=x86_64-native-linuxapp-gcc O=x86_64-native-linuxapp-gcc
 	cd <dpdk-dir>/x86_64-native-linuxapp-gcc
 	sed -ri 's,(CONFIG_RTE_BUILD_COMBINE_LIBS=).*,\1y,' .config
