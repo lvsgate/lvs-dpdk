@@ -2,7 +2,7 @@
 
 This project has ported LVS FULLNAT/DR/NAT to OpenFastPath(base on odp-dpdk).
 
-FULLNAT and NAT are only available on single core while DR support mult-core.
+NAT are only available on single core while FULLNAT and DR support multi-core.
 
 LVS-FULLNAT origin source code is at https://github.com/alibaba/LVS
 
@@ -32,7 +32,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
         export RTE_TARGET=x86_64-native-linuxapp-gcc
 	    
 ##2. Fetch and compile odp-dpdk
-	git clone  https://git.linaro.org/lng/odp-dpdk.git <odp-dir>
+	git clone  https://github.com/lvsgate/odp-dpdk.git <odp-dir>
 	cd <odp-dir>
 	./bootstrap
 	./configure --with-platform=linux-dpdk --with-sdk-install-path=<dpdk-dir>/x86_64-native-linuxapp-gcc --prefix=<INSTALL ODP-DPDK TO THIS DIR>
@@ -71,8 +71,8 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 		
 ## 6. Run lvs-dpdk
     cd <ofp-dir>/examples/ofp_vs
-    ./ofp_vs -i 0,1 -c 3 -f ofp.conf # -i <port1>,<port2>  
-                                     # -c <core count which include control core> 
+    ./ofp_vs -i 0,1 -c 2 -f ofp.conf # -i <port1>,<port2>  
+                                     # -c <worker core count> 
                                      # -f <config file include default command which you can change in ofp cli>
 
 ## 7. Connect to ofp cli and configure network
@@ -82,18 +82,29 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     # fp0 equal to port number 0 in dpdk
     >>> ifconfig fp0 <ip_addr>/<net_mask> 
     >>> ifconfig fp1 <ip_addr>/<net_mask> 
+    #default gw don't work, may be ofp's bug.
     >>> route add 0.0.0.0/0 gw <next hop> dev fp0
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
+    #Add flow director entry for binding local address <a.b.c.d> to rx-queue-id <d%woker_core_count>(d is the last byte of ipv4addr)
+    #In this example, worker core count is 2.The local address for FULLNAT use net 192.168.210.0/24.
+    >>> fdir add fp0 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.100 dst_port 0 queue_id 0
+    >>> fdir add fp0 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.101 dst_port 0 queue_id 1
+    >>> fdir add fp0 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.102 dst_port 0 queue_id 0
+    >>> fdir add fp0 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.103 dst_port 0 queue_id 1
     #You can add these commands above to startup config file ofp.conf
 
 
 ## 8. Use ipvsadm and keepalived to configure virtual server on ofp_vs
 	#The usage is unchanged.
 	#ipvsadm and keepalived will comunicate with ofp_vs process but not the kernel module.
+	#Create FULLNAT virtual server
 	ipvsadm  -A  -t <vip:vport> -s rr
-	ipvsadm  -a  -t <vip:vport> -r <rsip:rsport> -b
-	ipvsadm  -P  -t <vip:vport> -z <local_addr>
-	ipvsadm  -P  -t <vip:vport> -z <local_addr>
+	ipvsadm  -a  -t <vip:vport> -r <rsip1:rsport> -b
+	ipvsadm  -a  -t <vip:vport> -r <rsip2:rsport> -b
+	ipvsadm  -P  -t <vip:vport> -z <local_addr1>
+	ipvsadm  -P  -t <vip:vport> -z <local_addr2>
+	ipvsadm  -P  -t <vip:vport> -z <local_addr3>
+	ipvsadm  -P  -t <vip:vport> -z <local_addr4>
 	ipvsadm -ln
 	ipvadm -G
     
@@ -104,6 +115,8 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     http://www.openfastpath.org/
     http://opendataplane.org/
     https://github.com/OpenFastPath/ofp
+    https://github.com/lvsgate/ofp
+    https://github.com/lvsgate/odp-dpdk
 
 ## 11. Support
 	email: lvsgateservice@gmail.com
