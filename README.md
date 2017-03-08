@@ -98,7 +98,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     #You can add these commands above to startup config file ofp.conf
     
     
-##9. Connect to ofp
+##9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
     telnet localhost 2345
     >>> snat enable
     >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sdh
