@@ -71,8 +71,10 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 		
 ## 6. Run lvs-dpdk
     cd <ofp-dir>/examples/ofp_vs
-    ./ofp_vs -i 0,1 -c 2 -f ofp.conf # -i <port1>,<port2>  
+    ./ofp_vs -i 0,1 -c 2 -o 0 -p 1 -f ofp.conf # -i <port1>,<port2>  
                                      # -c <worker core count> 
+				     # -o <outer port to wan, for snat-gw fdir mask initialize>
+				     # -p <inner port to lan, for fullnat fdir mask initialize >
                                      # -f <config file include default command which you can change in ofp cli>
 
 ## 7. Connect to ofp cli or edit ofp.conf to configure network
@@ -103,8 +105,8 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     >>> snat enable
     >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sdh
     >>> snat add from 10.1.0.10/32 to 0.0.0.0/0 out_dev fp0 source 192.168.50.100 - 192.168.50.103 algo sdh
-    #The snat source port will be reassign by format port & core_mask = core-index
-    #In this example, the worker core count is 2. The formula is port & 0x1 = core-index = rx-queue-id
+    #The snat source port will be reassign by formula: port & core_mask = core_index
+    #In this example, the worker core count is 2. The formula is port & 0x1 = core_index = rx-queue-id
     #So bind port to queue with this formula.
     >>> fdir add fp0 proto ipv4-tcp src_ipv4 0.0.0.0 src_port 0 dst_ipv4 0.0.0.0 dst_port 0 queue_id 0
     >>> fdir add fp0 proto ipv4-tcp src_ipv4 0.0.0.0 src_port 0 dst_ipv4 0.0.0.0 dst_port 1 queue_id 1
