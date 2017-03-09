@@ -5,7 +5,9 @@ This project has ported LVS FULLNAT/DR/NAT and SNAT-GATEWAY to OpenFastPath(base
 NAT are only available on single core while FULLNAT,DR and SNAT-GATEWAY support multi-cores.
 
 LVS-FULLNAT origin source code is at https://github.com/alibaba/LVS
+
 LVS-SNAT gateway origin source code is at https://github.com/jlijian3/lvs-snat
+
 OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 
 #Prerequisites
