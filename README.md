@@ -2,7 +2,7 @@
 
 This project has ported LVS FULLNAT/DR/NAT and SNAT-GATEWAY to OpenFastPath(base on odp-dpdk).
 
-NAT are only available on single core while FULLNAT,DR and SNAT-GATEWAY support multi-core.
+NAT are only available on single core while FULLNAT,DR and SNAT-GATEWAY support multi-cores.
 
 LVS-FULLNAT origin source code is at https://github.com/alibaba/LVS
 LVS-SNAT gateway origin source code is at https://github.com/jlijian3/lvs-snat
@@ -10,7 +10,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 
 #Prerequisites
 - Intel x86 CPU
-- NIC which support flow director
+- NIC which support flow director, if you want to run on multi-cores
 - lvs-dpdk has been compiled and tested on Centos 7.2 with 3.10 kernel
 
 # Build steps
@@ -73,9 +73,11 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     cd <ofp-dir>/examples/ofp_vs
     ./ofp_vs -i 0,1 -c 2 -o 0 -p 1 -f ofp.conf # -i <port1>,<port2>  
                                      # -c <worker core count> 
-				     # -o <outer port to wan, for snat-gw fdir mask initialize>
-				     # -p <inner port to lan, for fullnat fdir mask initialize >
+                                     # -o <outer port to wan, snat-gw fdir rule will be add to this port>
+                                     # -p <inner port to lan, fullnat fdir rule  will be add to this port>
                                      # -f <config file include default command which you can change in ofp cli>
+    #If worker core count > 0, -o is required for snat-gw, -p is required for fullnat.
+
 
 ## 7. Connect to ofp cli or edit ofp.conf to configure network
     telnet localhost 2345
@@ -88,34 +90,18 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     >>> route add 0.0.0.0/0 gw <next hop> dev fp0
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
     
-## 8. Connect to ofp cli or edit ofp.conf to configure fullnat flow director
-    telnet localhost 2345
-    #In this example, The worker core count is 2.The local address for FULLNAT use net 192.168.210.0/24.
-    #Configure your router or swich to route the local address to the interface fp1
-    #Add flow director entry for binding local address <a.b.c.d> to rx-queue-id <d%woker_core_count>(d is the last byte of ipv4addr)
-    >>> fdir add fp1 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.100 dst_port 0 queue_id 0
-    >>> fdir add fp1 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.101 dst_port 0 queue_id 1
-    >>> fdir add fp1 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.102 dst_port 0 queue_id 0
-    >>> fdir add fp1 proto ipv4 src_ipv4 0.0.0.0 src_port 0 dst_ipv4 192.168.210.103 dst_port 0 queue_id 1
-    #You can add these commands above to startup config file ofp.conf
-    
     
 ##9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
     telnet localhost 2345
     >>> snat enable
-    >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sdh
-    >>> snat add from 10.1.0.10/32 to 0.0.0.0/0 out_dev fp0 source 192.168.50.100 - 192.168.50.103 algo sdh
-    #The snat source port will be reassign by formula: port & core_mask = core_index
-    #In this example, the worker core count is 2. The formula is port & 0x1 = core_index = rx-queue-id
-    #So bind port to queue with this formula.
-    >>> fdir add fp0 proto ipv4-tcp src_ipv4 0.0.0.0 src_port 0 dst_ipv4 0.0.0.0 dst_port 0 queue_id 0
-    >>> fdir add fp0 proto ipv4-tcp src_ipv4 0.0.0.0 src_port 0 dst_ipv4 0.0.0.0 dst_port 1 queue_id 1
+    >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sd
+    >>> snat add from 10.1.0.10/32 to 0.0.0.0/0 out_dev fp0 source 192.168.50.100 - 192.168.50.103 algo sdfn
     
 
 ## 10. Use ipvsadm and keepalived to configure virtual server on ofp_vs
 	#The usage is unchanged.
 	#ipvsadm and keepalived will comunicate with ofp_vs process but not the kernel module.
-	#Create FULLNAT virtual server
+	#Create FULLNAT virtual server, local address count must be greater than worker count
 	ipvsadm  -A  -t <vip:vport> -s rr
 	ipvsadm  -a  -t <vip:vport> -r <rsip1:rsport> -b
 	ipvsadm  -a  -t <vip:vport> -r <rsip2:rsport> -b
