@@ -11,12 +11,15 @@ LVS-SNAT gateway origin source code is at https://github.com/jlijian3/lvs-snat
 OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 
 #Prerequisites
+
 - Intel x86 CPU
 - NIC which support flow director, if you want to run on multi-cores
 - lvs-dpdk has been compiled and tested on Centos 7.2 with 3.10 kernel
 
 # Build steps
-##1. Fetch and compile DPDK
+
+## 1. Fetch and compile DPDK
+
 	git clone git://dpdk.org/dpdk ./<dpdk-dir>
 	cd <dpdk-dir>
 	#git checkout -b 16.07 tags/v16.07 #Maybe this step can be ignored
@@ -33,7 +36,8 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 	export RTE_SDK=<dpdk-dir>
         export RTE_TARGET=x86_64-native-linuxapp-gcc
 	    
-##2. Fetch and compile odp-dpdk
+## 2. Fetch and compile odp-dpdk
+
 	git clone  https://github.com/lvsgate/odp-dpdk.git <odp-dir>
 	cd <odp-dir>
 	./bootstrap
@@ -41,7 +45,8 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 	make
 	make install
 	
-##3. Fetch and compile ofp
+## 3. Fetch and compile ofp
+
 	yum install libnl3 libnl3-cli
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
@@ -50,6 +55,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 	make
 
 ## 4. Fetch and compiled lvs-dpdk tools
+
 	git clone https://github.com/lvsgate/lvs-dpdk.git
 	cd lvs-dpdk/tools/keepalived
 	./configure
@@ -59,7 +65,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 	make
 	make install
 
-##5. Prepare DPDK for running lvs-dpdk
+## 5. Prepare DPDK for running lvs-dpdk
 	echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 	mkdir /mnt/huge
 	mount -t hugetlbfs nodev /mnt/huge
@@ -93,7 +99,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
     
     
-##9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
+## 9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
     telnet localhost 2345
     >>> snat enable
     >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sd
