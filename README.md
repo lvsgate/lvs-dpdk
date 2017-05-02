@@ -47,7 +47,7 @@ OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 	
 ## 3. Fetch and compile ofp
 
-	yum install libnl3 libnl3-cli
+	yum install libnl3 libnl3-cli libnl3-devel
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
