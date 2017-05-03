@@ -10,6 +10,8 @@ LVS-SNAT gateway origin source code is at https://github.com/jlijian3/lvs-snat
 
 OpenFastPath source code is at https://github.com/lvsgate/ofp.git
 
+Please note that this project only had limited testing.
+
 # Prerequisites
 
 - Intel x86 CPU
