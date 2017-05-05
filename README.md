@@ -107,6 +107,8 @@ Please note that this project only had limited testing.
     >>> snat enable
     >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sd
     >>> snat add from 10.1.0.10/32 to 0.0.0.0/0 out_dev fp0 source 192.168.50.100 - 192.168.50.103 algo sdfn
+    >>> snat del from 10.1.0.10/32 to 0.0.0.0/0 out_dev fp0
+    >>> snat show
     
 
 ## 10. Use ipvsadm and keepalived to configure virtual server on ofp_vs
