@@ -80,6 +80,7 @@ Please note that this project only had limited testing.
 
 		
 ## 6. Run lvs-dpdk
+    modprobe ip_vs  #add this line to /etc/rc.local, because ipvsadm and keepalived depend on it.
     cd <ofp-dir>/examples/ofp_vs
     ./ofp_vs -i 0,1 -c 2 -o 0 -p 1 -f ofp.conf # -i <port1>,<port2>  
                                      # -c <worker core count> 
