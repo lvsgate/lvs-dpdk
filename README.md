@@ -2,7 +2,7 @@
 
 This project has ported LVS FULLNAT/DR/NAT and SNAT-GATEWAY to OpenFastPath(base on odp-dpdk).
 
-NAT are only available on single core while FULLNAT,DR and SNAT-GATEWAY support multi-cores.
+NAT is only available on single core while FULLNAT,DR and SNAT-GATEWAY support multi-cores.
 
 LVS-FULLNAT origin source code is at https://github.com/alibaba/LVS
 
