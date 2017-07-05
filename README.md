@@ -8,7 +8,9 @@ LVS-FULLNAT origin source code is at https://github.com/alibaba/LVS
 
 LVS-SNAT gateway origin source code is at https://github.com/jlijian3/lvs-snat
 
-OpenFastPath source code is at https://github.com/lvsgate/ofp.git
+I has forked OpenFastPath project and added ofp_vs example, see https://github.com/lvsgate/ofp.git
+
+I has forked odp-dpdk project and added support for flow director, see https://github.com/lvsgate/odp-dpdk.git
 
 Please note that this project only had limited testing.
 
@@ -24,19 +26,17 @@ Please note that this project only had limited testing.
 
 	git clone git://dpdk.org/dpdk ./<dpdk-dir>
 	cd <dpdk-dir>
-	#git checkout -b 16.07 tags/v16.07 #Maybe this step can be ignored
+	git checkout -b 17.02 tags/v17.02
 	make config T=x86_64-native-linuxapp-gcc O=x86_64-native-linuxapp-gcc
 	cd <dpdk-dir>/x86_64-native-linuxapp-gcc
-	sed -ri 's,(CONFIG_RTE_BUILD_COMBINE_LIBS=).*,\1y,' .config
-	sed -ri 's,(CONFIG_RTE_BUILD_SHARED_LIB=).*,\1n,' .config
-	sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
-	sed -ri 's,(CONFIG_RTE_LIBRTE_IXGBE_ALLOW_UNSUPPORTED_SFP=).*,\1y,' .config
+    sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
+    sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
 	cd ..
 	make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
 	
-	#A env value
+	#Add env value
 	export RTE_SDK=<dpdk-dir>
-        export RTE_TARGET=x86_64-native-linuxapp-gcc
+    export RTE_TARGET=x86_64-native-linuxapp-gcc
 	    
 ## 2. Fetch and compile odp-dpdk
 
@@ -53,7 +53,7 @@ Please note that this project only had limited testing.
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
-	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie
+	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CXXFLAGS=-I<ODP-DPDK INSTALLATION DIR>include/odp/arch/x86_64-linux/
 	make
 
 ## 4. Fetch and compiled lvs-dpdk tools
@@ -74,9 +74,9 @@ Please note that this project only had limited testing.
 	modprobe uio
 	insmod <dpdk-dir>/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
 	cd <dpdk-dir>
-	./tools/dpdk_nic_bind.py --status
-	./tools/igb_uio_bind.py --bind=igb_uio <pci-id-1>
-	./tools/igb_uio_bind.py --bind=igb_uio <pci-id-2>
+	./usertools/dpdk-devbind.py --status
+	./usertools/dpdk-devbind.py --bind=igb_uio <pci-id-1>
+	./usertools/dpdk-devbind.py --bind=igb_uio <pci-id-2>
 
 		
 ## 6. Run lvs-dpdk
@@ -97,7 +97,7 @@ Please note that this project only had limited testing.
     # fp0 equal to port number 0 in dpdk
     >>> ifconfig fp0 <ip_addr>/<net_mask> 
     >>> ifconfig fp1 <ip_addr>/<net_mask> 
-    #default gw don't work, may be ofp's bug.
+    #default gw don't work if enable mtries routing, may be ofp's bug.
     >>> route add 0.0.0.0/0 gw <next hop> dev fp0
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
     
