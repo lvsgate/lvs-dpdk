@@ -8,9 +8,9 @@ LVS-FULLNAT origin source code is at https://github.com/alibaba/LVS
 
 LVS-SNAT gateway origin source code is at https://github.com/jlijian3/lvs-snat
 
-I has forked OpenFastPath project and added ofp_vs example, see https://github.com/lvsgate/ofp.git
+I had forked OpenFastPath project and added ofp_vs example, see https://github.com/lvsgate/ofp.git
 
-I has forked odp-dpdk project and added support for flow director, see https://github.com/lvsgate/odp-dpdk.git
+I had forked odp-dpdk project and added support for flow director, see https://github.com/lvsgate/odp-dpdk.git
 
 Please note that this project only had limited testing.
 
