@@ -68,7 +68,7 @@ Please note that this project only had limited testing.
 	make install
 
 ## 5. Prepare DPDK for running lvs-dpdk
-	echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
+	echo 2048 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 	mkdir /mnt/huge
 	mount -t hugetlbfs nodev /mnt/huge
 	modprobe uio
