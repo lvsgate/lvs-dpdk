@@ -137,3 +137,4 @@ Please note that this project only had limited testing.
 
 ## 13. Support
 	email: lvsgateservice@gmail.com
+	QQ group: 664555119
