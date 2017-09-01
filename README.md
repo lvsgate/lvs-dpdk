@@ -43,7 +43,7 @@ Please note that this project only had limited testing.
 	git clone  https://github.com/lvsgate/odp-dpdk.git <odp-dir>
 	cd <odp-dir>
 	./bootstrap
-	./configure --with-platform=linux-dpdk --with-sdk-install-path=<dpdk-dir>/x86_64-native-linuxapp-gcc --prefix=<INSTALL ODP-DPDK TO THIS DIR>
+	./configure --with-platform=linux-dpdk --enable-helper-linux --with-sdk-install-path=<dpdk-dir>/x86_64-native-linuxapp-gcc --prefix=<INSTALL ODP-DPDK TO THIS DIR>
 	make
 	make install
 	
