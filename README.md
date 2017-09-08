@@ -84,8 +84,8 @@ Please note that this project only had limited testing.
     cd <ofp-dir>/examples/ofp_vs
     ./ofp_vs -i 0,1 -c 2 -o 0 -p 1 -f ofp.conf # -i <port1>,<port2>  
                                      # -c <worker core count> 
-                                     # -o <outer port to wan, snat-gw fdir rule will be add to this port>
-                                     # -p <inner port to lan, fullnat fdir rule  will be add to this port>
+                                     # -o <required for snat-gw, outer port to wan, snat-gw fdir rule will be add to this port>
+                                     # -p <required for fullnat, inner port to lan, fullnat fdir rule  will be add to this port>
                                      # -f <config file include default command which you can change in ofp cli>
     #If worker core count > 0, -o is required for snat-gw, -p is required for fullnat.
 
