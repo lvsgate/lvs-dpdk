@@ -19,6 +19,7 @@ Please note that this project only had limited testing.
 - Intel x86 CPU
 - NIC which support flow director, if you want to run on multi-cores
 - lvs-dpdk has been compiled and tested on Centos 7.2 with 3.10 kernel
+- memory mast bigger than 2048*2MB
 
 # Build steps
 
@@ -53,8 +54,9 @@ Please note that this project only had limited testing.
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
-	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CXXFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
+	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
 	make
+	make install
 
 ## 4. Fetch and compiled lvs-dpdk tools
 
