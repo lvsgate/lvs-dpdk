@@ -12,13 +12,14 @@ I had forked OpenFastPath project  added support for flow director and ofp_vs ex
 
 I had forked odp-dpdk project and added support for flow director, see https://github.com/lvsgate/odp-dpdk.git
 
-Please note that this project only had limited testing.
+Please note that this project is Experimental, it only had limited testing and never run production environment.
 
 # Prerequisites
 
 - Intel x86 CPU
 - NIC which support flow director, if you want to run on multi-cores
 - lvs-dpdk has been compiled and tested on Centos 7.2 with 3.10 kernel
+- 5G memory at least
 
 # Build steps
 
