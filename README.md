@@ -12,7 +12,7 @@ I had forked OpenFastPath project  added support for flow director and ofp_vs ex
 
 I had forked odp-dpdk project and added support for flow director, see https://github.com/lvsgate/odp-dpdk.git
 
-Please note that this project is Experimental, it only had limited testing and never run production environment.
+Please note that this project is Experimental, it only had limited testing and never run in production environment.
 
 # Prerequisites
 
