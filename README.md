@@ -54,7 +54,7 @@ Please note that this project is Experimental, it only had limited testing and n
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
-	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CXXFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
+	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
 	make
 
 ## 4. Fetch and compiled lvs-dpdk tools
