@@ -30,10 +30,13 @@ Please note that this project is Experimental, it only had limited testing and n
 	git checkout -b 17.02 tags/v17.02
 	make config T=x86_64-native-linuxapp-gcc O=x86_64-native-linuxapp-gcc
 	cd <dpdk-dir>/x86_64-native-linuxapp-gcc
-    sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
-    sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
+        sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
+    	sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
 	cd ..
-	make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
+	#SHARED library
+		make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
+	#STATIC library
+		make install T=x86_64-native-linuxapp-gcc
 	
 	#Add env value
 	export RTE_SDK=<dpdk-dir>
@@ -44,7 +47,11 @@ Please note that this project is Experimental, it only had limited testing and n
 	git clone  https://github.com/lvsgate/odp-dpdk.git <odp-dir>
 	cd <odp-dir>
 	./bootstrap
-	./configure --with-platform=linux-dpdk --enable-helper-linux --with-sdk-install-path=<dpdk-dir>/x86_64-native-linuxapp-gcc --prefix=<INSTALL ODP-DPDK TO THIS DIR>
+	#SHARED library
+	./configure --enable-shared --with-platform=linux-dpdk --enable-helper-linux --with-sdk-install-path=<dpdk-dir>/x86_64-native-linuxapp-gcc --prefix=<INSTALL ODP-DPDK TO THIS DIR>
+	#STATIC library
+	./configure --disable-shared ......
+	
 	make
 	make install
 	
