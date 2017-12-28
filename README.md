@@ -109,7 +109,7 @@ Please note that this project is Experimental, it only had limited testing and n
     >>> route add 0.0.0.0/0 gw <next hop> dev fp0
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
     
-## 8. Configure network on you switch/router
+## 8. Configure network on your switch/router
     #The ip on the port is used as nexthop of virtual server ip and local address.
     #H3C switch example.
     #add route for virutal server address or SNAT source address
