@@ -113,9 +113,9 @@ Please note that this project is Experimental, it only had limited testing and n
     #The ip on the port is used as nexthop of virtual server ip and local address.
     #H3C switch example.
     #add route for virutal server address or SNAT source address
-    >>> ip route-static x.x.x.0 255.255.255.0 <nexthop ip on the port0 for inbound> 
+    >>> ip route-static x.x.x.0 255.255.255.0 <nexthop ip on the port for inbound> 
     #add route for local address of FULLNAT
-    >>> ip route-static y.y.y.0 255.255.255.0 <nexthop ip on the port1 for outbound> 
+    >>> ip route-static y.y.y.0 255.255.255.0 <nexthop ip on the port for outbound> 
     
     
 ## 9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
