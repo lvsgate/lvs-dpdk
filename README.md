@@ -109,6 +109,14 @@ Please note that this project is Experimental, it only had limited testing and n
     >>> route add 0.0.0.0/0 gw <next hop> dev fp0
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
     
+## 8. Configure network on you switch/router
+    #The ip on the port is used as nexthop of virtual server ip and local address.
+    #H3C switch example.
+    #add route for virutal server address or SNAT source address
+    >>> ip route-static x.x.x.0 255.255.255.0 <nexthop ip on the port0 for inbound> 
+    #add route for local address of FULLNAT
+    >>> ip route-static y.y.y.0 255.255.255.0 <nexthop ip on the port1 for outbound> 
+    
     
 ## 9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
     telnet localhost 2345
