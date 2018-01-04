@@ -1,7 +1,7 @@
 # Makefile for libipvs
 
 CC		= gcc
-CFLAGS		= -g -O2  -I/usr/src/linux/include -DLIBIPVS_USE_NL -Wall -Wunused
+CFLAGS		= -g -O2 -I/usr/include/libnl3/ -I/usr/src/linux/include -DLIBIPVS_USE_NL -Wall -Wunused
 
 export OBJS += libipvs.a
 

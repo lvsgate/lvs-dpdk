@@ -159,6 +159,7 @@ int ipvs_init(void)
         if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
                 return -1;
 
+        fprintf(stderr, "%s use getsockopt \n", __func__);
         if (getsockopt(sockfd, IPPROTO_IP, IP_VS_SO_GET_INFO,
                        (char *)&ipvs_info, &len))
                 return -1;
@@ -201,6 +202,7 @@ int ipvs_getinfo(void)
         }
 #endif
 
+        fprintf(stderr, "%s use getsockopt \n", __func__);
         len = sizeof(ipvs_info);
         return getsockopt(sockfd, IPPROTO_IP, IP_VS_SO_GET_INFO,
                           (char *)&ipvs_info, &len);
