@@ -90,8 +90,8 @@ Please note that this project is Experimental, it only had limited testing and n
 ## 6. Run lvs-dpdk
     modprobe ip_vs  #add this line to /etc/rc.local, because ipvsadm and keepalived depend on it.
     cd <ofp-dir>/examples/ofp_vs
-    ./ofp_vs -i 0,1 -c 2 -p 1 -f ofp.conf # -i <port1>,<port2>  
-                                     # -c <worker core count> 
+    ./ofp_vs -i 0,1 -c 0x00f0 -p 1 -f ofp.conf # -i <port1>,<port2>  
+                                     # -c <worker core mask> 
                                      # -o <required for snat-gw, outer port to wan, snat-gw fdir rule will be add to this port>
                                      # -p <required for fullnat, inner port to lan, fullnat fdir rule  will be add to this port>
                                      # -f <config file include default command which you can change in ofp cli>
