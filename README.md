@@ -68,7 +68,7 @@ Please note that this project is Experimental, it only had limited testing and n
 
 	git clone https://github.com/lvsgate/lvs-dpdk.git
 	cd lvs-dpdk/tools/keepalived
-	sh configure --prefix=/usr --sysconfdir=/etc/ CPPFLAGS=-I/usr/include/libnl3/
+	sh configure --prefix=/usr --sysconfdir=/etc/ CPPFLAGS=-I/usr/include/libnl3/ LDFLAGS=-L/usr/lib64/
 	make
 	make install
 	cd lvs-dpdk/tools/ipvsadm
