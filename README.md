@@ -110,12 +110,12 @@ Please note that this project is Experimental, it only had limited testing and n
     >>> route add <ip_addr>/<net_mask> gw <next hop> dev fp1
     
 ## 8. Configure network on your switch/router
-    #The ip on the port is used as nexthop of virtual server ip and local address.
+    #The ip on the port is used as nexthop of vs/snat ip or local address.
     #H3C switch example.
     #add route for virutal server address or SNAT source address
-    >>> ip route-static x.x.x.0 255.255.255.0 <nexthop ip on the port to wan> 
+    >>> ip route-static <vs.ip.x.0> 255.255.255.0 <nexthop ip on the port to wan> 
     #add route for local address of FULLNAT
-    >>> ip route-static y.y.y.0 255.255.255.0 <nexthop ip on the port to lan> 
+    >>> ip route-static <local.addr.x.0> 255.255.255.0 <nexthop ip on the port to lan> 
     
     
 ## 9. Start and configure SNAT-GATEWAY
