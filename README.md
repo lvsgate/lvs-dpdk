@@ -87,7 +87,7 @@ Please note that this project is Experimental, it only had limited testing and n
 	./usertools/dpdk-devbind.py --bind=igb_uio <pci-id-2>
 
 		
-## 6. Run lvs-dpdk
+## 6. Run ofp_vs
     modprobe ip_vs  #add this line to /etc/rc.local, because ipvsadm and keepalived depend on it.
     cd <ofp-dir>/examples/ofp_vs
     ./ofp_vs -i 0,1 -c 0x00f0 -p 1 -f ofp.conf # -i <port1>,<port2>  
@@ -113,12 +113,13 @@ Please note that this project is Experimental, it only had limited testing and n
     #The ip on the port is used as nexthop of virtual server ip and local address.
     #H3C switch example.
     #add route for virutal server address or SNAT source address
-    >>> ip route-static x.x.x.0 255.255.255.0 <nexthop ip on the port for inbound> 
+    >>> ip route-static x.x.x.0 255.255.255.0 <nexthop ip on the port to wan> 
     #add route for local address of FULLNAT
-    >>> ip route-static y.y.y.0 255.255.255.0 <nexthop ip on the port for outbound> 
+    >>> ip route-static y.y.y.0 255.255.255.0 <nexthop ip on the port to lan> 
     
     
-## 9. Connect to ofp or edit ofp.conf to configure SNAT-GATEWAY
+## 9. Start and configure SNAT-GATEWAY
+    ./ofp_vs -i 0,1 -c 0x00f0 -o 0 -f ofp.conf  #-o specify the port to wan
     telnet localhost 2345
     >>> snat enable
     >>> snat add from 10.1.0.0/16 to 0.0.0.0/0 out_dev fp0 source 192.168.50.253 - 192.168.50.253 algo sd
@@ -127,8 +128,9 @@ Please note that this project is Experimental, it only had limited testing and n
     >>> snat show
     
 
-## 10. Use ipvsadm and keepalived to configure virtual server on ofp_vs
-	#The usage is unchanged.
+## 10. Start and configure FULLNAT virtual server
+	./ofp_vs -i 0,1 -c 0x00f0 -p 1 -f ofp.conf  #-p specify the port to lan
+	
 	#ipvsadm and keepalived will comunicate with ofp_vs process but not the kernel module.
 	#Create FULLNAT virtual server, local address count must be greater than worker count
 	ipvsadm  -A  -t <vip:vport> -s rr
