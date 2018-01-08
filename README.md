@@ -33,14 +33,11 @@ Please note that this project is Experimental, it only had limited testing and n
 	sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
 	sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
 	cd ..
-	#SHARED library
-		make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
-	#STATIC library
-		make install T=x86_64-native-linuxapp-gcc
+	make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
 	
 	#Add env value
 	export RTE_SDK=<dpdk-dir>
-    export RTE_TARGET=x86_64-native-linuxapp-gcc
+    	export RTE_TARGET=x86_64-native-linuxapp-gcc
 	    
 ## 2. Fetch and compile odp-dpdk
 
@@ -49,8 +46,7 @@ Please note that this project is Experimental, it only had limited testing and n
 	./bootstrap
 	#SHARED library
 	./configure --enable-shared --with-platform=linux-dpdk --enable-helper-linux --with-sdk-install-path=<dpdk-dir>/x86_64-native-linuxapp-gcc --prefix=<INSTALL ODP-DPDK TO THIS DIR>
-	#STATIC library
-	./configure --disable-shared ......
+	#If build only static library, dpdk driver register function defined with __attribute__(construction) won't be called.
 	
 	make
 	make install
