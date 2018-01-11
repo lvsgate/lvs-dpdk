@@ -6,7 +6,7 @@
 
 CC	 = gcc
 INCLUDES = -I../include -I../../lib
-CFLAGS	 = -g -O2  -I/usr/src/linux/include $(INCLUDES) \
+CFLAGS	 = -g -O2 -I/usr/include/libnl3/ -I/usr/src/linux/include $(INCLUDES) \
 	   -Wall -Wunused -Wstrict-prototypes
 DEFS	 = -D_KRNL_2_6_ -D_WITH_LVS_ -D_WITH_VRRP_ 
 COMPILE	 = $(CC) $(CFLAGS) $(DEFS)

@@ -13,7 +13,7 @@ mandir      = ${prefix}/share/man
 CC = gcc
 STRIP = strip
 INCLUDES = -I../lib
-CFLAGS = -g -O2  -I/usr/src/linux/include $(INCLUDES) \
+CFLAGS = -g -O2 -I/usr/include/libnl3/ -I/usr/src/linux/include $(INCLUDES) \
 	 -Wall -Wunused -Wstrict-prototypes
 LDFLAGS = -lpopt -lssl -lcrypto  -lnl-3 -lnl-genl-3 
 
