@@ -21,6 +21,12 @@ Please note that this project is experimental, it only had limited testing and n
 - lvs-dpdk has been compiled and tested on Centos 7.2 with 3.10 kernel
 - 5G memory at least
 
+# Performance
+- CPU E5-2682 v4 @ 2.50GHz
+- NIC intel 82599 10G
+- fullnat 800w pps if use 6 cores (in 400w pps and out 400w pps)
+
+
 # Build steps
 
 ## 1. Fetch and compile DPDK
