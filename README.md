@@ -142,6 +142,9 @@ Please note that this project is experimental, it only had limited testing and n
 	ipvsadm  -P  -t <vip:vport> -z <local_addr2>
 	ipvsadm  -P  -t <vip:vport> -z <local_addr3>
 	ipvsadm  -P  -t <vip:vport> -z <local_addr4>
+	...
+	...
+	ipvsadm  -P  -t <vip:vport> -z <local_addr254>
 	ipvsadm -ln
 	ipvadm -G
     
