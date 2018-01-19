@@ -31,7 +31,7 @@ Please note that this project is experimental, it only had limited testing and n
 	cd lvs-dpdk
 	./build_all.sh
 	cd ofp_vs
-If build all successly [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), otherwise build one by one.
+If build all successfully [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), otherwise build one by one.
 
 # Build steps one by one
 
