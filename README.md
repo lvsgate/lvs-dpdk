@@ -26,8 +26,13 @@ Please note that this project is experimental, it only had limited testing and n
 - NIC intel 82599 10G
 - fullnat 800w pps if use 6 cores (in 400w pps and out 400w pps)
 
+# Build all in one step
+	git clone https://github.com/lvsgate/lvs-dpdk.git
+	cd lvs-dpdk
+	./build_all.sh
+If build all successly [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), otherwise build one by one.
 
-# Build steps
+# Build steps one by one
 
 ## 1. Fetch and compile DPDK
 
@@ -76,7 +81,7 @@ Please note that this project is experimental, it only had limited testing and n
 	cd lvs-dpdk/tools/ipvsadm
 	make
 	make install
-
+	
 ## 5. Prepare DPDK for running lvs-dpdk
 	echo 2048 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages
 	mkdir /mnt/huge
