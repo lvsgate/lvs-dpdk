@@ -69,7 +69,7 @@ If build all successfully [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), o
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
-	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
+	./configure --disable-libconfig --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
 	make
 
 ## 4. Fetch and compiled lvs-dpdk tools
