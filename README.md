@@ -24,7 +24,7 @@ Please note that this project is experimental, it only had limited testing and n
 # Performance
 - CPU E5-2682 v4 @ 2.50GHz
 - NIC intel 82599 10G
-- fullnat 800w pps if use 6 cores (in 400w pps and out 400w pps)
+- fullnat 800w pps if use 5 cores (in 400w pps and out 400w pps)
 
 # Build all in one step
 	git clone https://github.com/lvsgate/lvs-dpdk.git
