@@ -68,7 +68,7 @@ fi
 cd $OFP_DIR
 git pull
 ./bootstrap
-./configure --with-odp-lib=odp-dpdk --with-odp=$ODP_DPDK_INSTALL_DIR --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I$ODP_DPDK_INSTALL_DIR/include/odp/arch/x86_64-linux/
+./configure --disable-libconfig --with-odp-lib=odp-dpdk --with-odp=$ODP_DPDK_INSTALL_DIR --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I$ODP_DPDK_INSTALL_DIR/include/odp/arch/x86_64-linux/
 
 if [ "$?" != "0" ]; then
     echo "Configure ofp error!"
