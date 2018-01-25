@@ -52,6 +52,10 @@ if [ "$?" != "0" ]; then
 fi
 
 make
+if [ "$?" != "0" ]; then
+    echo "Build odp-dpdk error!"
+    exit $?
+fi
 make install
 if [ "$?" != "0" ]; then
     echo "Build odp-dpdk error!"
@@ -77,6 +81,11 @@ fi
 
 make
 
+if [ "$?" != "0" ]; then
+    echo "Build ofp error!"
+    exit $?
+fi
+
 if [ ! -d $OFP_VS_INSTALL_DIR ]; then
     mkdir $OFP_VS_INSTALL_DIR
 fi
@@ -96,6 +105,10 @@ fi
 cd $ROOTDIR/tools/keepalived
 sh configure --prefix=/usr --sysconfdir=/etc/ CPPFLAGS=-I/usr/include/libnl3/ LDFLAGS=-L/usr/lib64/
 make
+if [ "$?" != "0" ]; then
+    echo "Build ipvsadm error!"
+    exit $?
+fi
 make install
 if [ "$?" != "0" ]; then
     echo "Build keepalived error!"
@@ -104,6 +117,10 @@ fi
 
 cd $ROOTDIR/tools/ipvsadm
 make
+if [ "$?" != "0" ]; then
+    echo "Build ipvsadm error!"
+    exit $?
+fi
 make install
 if [ "$?" != "0" ]; then
     echo "Build ipvsadm error!"
