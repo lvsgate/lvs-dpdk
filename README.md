@@ -24,7 +24,7 @@ Please note that this project is experimental, it only had limited testing and n
 # Performance
 - CPU E5-2682 v4 @ 2.50GHz
 - NIC intel 82599 10G
-- fullnat 800w pps if use 6 cores (in 400w pps and out 400w pps)
+- fullnat 800w pps if use 5 cores (in 400w pps and out 400w pps)
 
 # Build all in one step
 	git clone https://github.com/lvsgate/lvs-dpdk.git
@@ -69,7 +69,7 @@ If build all successfully [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), o
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
-	./configure --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
+	./configure --disable-libconfig --with-odp-lib=odp-dpdk --with-odp=<ODP-DPDK INSTALLATION DIR> --enable-shared=no --enable-sp=yes --disable-mtrie CPPFLAGS=-I<ODP-DPDK INSTALLATION DIR>/include/odp/arch/x86_64-linux/
 	make
 
 ## 4. Fetch and compiled lvs-dpdk tools
