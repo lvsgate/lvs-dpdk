@@ -7,19 +7,23 @@ OFP_DIR=$ROOTDIR/ofp
 OFP_VS_INSTALL_DIR=$ROOTDIR/ofp_vs
 RTE_TARGET=x86_64-native-linuxapp-gcc
 
+echo '#include "pcap.h"' | cpp -H -o /dev/null 2>&1
+if [ "$?" != "0" ]; then
+	echo "Error: pcap is not installed. You may need to install libpcap-dev"
+fi
+
 #Fetch and build dpdk
 if [ ! -d $DPDK_DIR ]; then
-    git clone git://dpdk.org/dpdk $DPDK_DIR
+    #git clone git://dpdk.org/dpdk $DPDK_DIR
+    git -c advice.detachedHead=false clone -q --depth=1 --single-branch --branch=v17.02 http://dpdk.org/git/dpdk $DPDK_DIR
 fi
 
 if [ ! -d $DPDK_DIR/$RTE_TARGET ]; then
     cd $DPDK_DIR
-    git pull
-    git checkout v17.02
     make config T=$RTE_TARGET O=$RTE_TARGET
     cd $DPDK_DIR/$RTE_TARGET
     sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
-    sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
+    #sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
     cd $DPDK_DIR
     make install T=$RTE_TARGET EXTRA_CFLAGS="-fPIC"
 fi

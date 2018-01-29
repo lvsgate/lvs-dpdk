@@ -43,7 +43,6 @@ If build all successfully [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), o
 	make config T=x86_64-native-linuxapp-gcc O=x86_64-native-linuxapp-gcc
 	cd <dpdk-dir>/x86_64-native-linuxapp-gcc
 	sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_PCAP=).*,\1y,' .config
-	sed -ri 's,(CONFIG_RTE_LIBRTE_PMD_OPENSSL=).*,\1y,' .config
 	cd ..
 	make install T=x86_64-native-linuxapp-gcc EXTRA_CFLAGS="-fPIC"
 	
