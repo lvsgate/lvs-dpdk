@@ -64,7 +64,7 @@ If build all successfully [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), o
 	
 ## 3. Fetch and compile ofp
 
-	yum install libnl3 libnl3-cli libnl3-devel
+	yum install libnl3 libnl3-cli libnl3-devel #or download rpm from https://www.infradead.org/~tgr/libnl/
 	git clone https://github.com/lvsgate/ofp.git <ofp-dir>
 	cd <ofp-dir>
 	./bootstrap
