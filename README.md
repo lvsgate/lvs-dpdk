@@ -166,7 +166,3 @@ If build all successfully [Goto step 5](#5-prepare-dpdk-for-running-lvs-dpdk), o
     https://github.com/OpenFastPath/ofp
     https://github.com/lvsgate/ofp
     https://github.com/lvsgate/odp-dpdk
-
-## 13. Support
-	email: lvsgateservice@gmail.com
-	QQ group: 664555119
